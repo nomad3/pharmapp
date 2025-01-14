@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: comparador_backend
+    ports:
+      - "8000:8000"
+    networks:
+      - comparador_net
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: comparador_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - comparador_net
+
+networks:
+  comparador_net:
+    driver: bridge 
