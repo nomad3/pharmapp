@@ -1,18 +1,12 @@
-# Utilizar la imagen oficial de Python como base
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-# Establecer el directorio de trabajo en /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev gcc && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-
-# Copiar los archivos de requisitos y el código fuente
 COPY requirements.txt .
-COPY app/ ./app
-
-# Instalar las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
-# Exponer el puerto en el que la aplicación correrá
-EXPOSE 8000
-
-# Comando para ejecutar la aplicación
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,26 +1,48 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgis/postgis:15-3.4
+    container_name: pharmapp_db
+    environment:
+      POSTGRES_DB: pharmapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - pharmapp_net
+
   backend:
     build:
       context: ./backend
-    container_name: comparador_backend
+    container_name: pharmapp_backend
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/pharmapp
+      SERVICETSUNAMI_API_URL: http://host.docker.internal:8001
     networks:
-      - comparador_net
+      - pharmapp_net
 
   frontend:
     build:
       context: ./frontend
-    container_name: comparador_frontend
+    container_name: pharmapp_frontend
     ports:
-      - "3000:80"
+      - "${WEB_PORT:-3000}:80"
     depends_on:
       - backend
     networks:
-      - comparador_net
+      - pharmapp_net
+
+volumes:
+  pgdata:
 
 networks:
-  comparador_net:
-    driver: bridge 
+  pharmapp_net:
+    driver: bridge
