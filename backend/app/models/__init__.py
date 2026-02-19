@@ -8,3 +8,5 @@ from app.models.price import Price
 from app.models.order import Order
 from app.models.order_item import OrderItem
 from app.models.order_delivery import OrderDelivery
+from app.models.user_favorite import UserFavorite
+from app.models.search_history import SearchHistory
