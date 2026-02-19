@@ -1,35 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import './App.css';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import SearchResultsPage from "./pages/SearchResultsPage";
+import MedicationDetailPage from "./pages/MedicationDetailPage";
+import LoginPage from "./pages/LoginPage";
+import OrderHistoryPage from "./pages/OrderHistoryPage";
+import FavoritesPage from "./pages/FavoritesPage";
+import PharmacyMapPage from "./pages/PharmacyMapPage";
+import "./App.css";
 
 function App() {
-  const [medicamentos, setMedicamentos] = useState([]);
-
-  useEffect(() => {
-    // Obtener medicamentos desde el backend a través del proxy
-    axios.get('/medicamentos')
-      .then(response => {
-        setMedicamentos(response.data);
-      })
-      .catch(error => {
-        console.error('Error al obtener medicamentos:', error);
-      });
-  }, []);
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Comparador de Medicamentos</h1>
-        <h2>Lista de Medicamentos</h2>
-        <ul>
-          {medicamentos.map(med => (
-            <li key={med.id}>
-              <strong>{med.nombre}</strong>: {med.descripcion}
-            </li>
-          ))}
-        </ul>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/search" element={<SearchResultsPage />} />
+        <Route path="/medication/:id" element={<MedicationDetailPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/orders" element={<OrderHistoryPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/map" element={<PharmacyMapPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
