@@ -10,3 +10,8 @@ api_router.include_router(orders.router)
 api_router.include_router(webhooks.router)
 api_router.include_router(favorites.router)
 api_router.include_router(search_history.router)
+
+@api_router.post("/admin/trigger-scraping")
+async def trigger_scraping():
+    from app.tasks.scraping import trigger_all_scrapers
+    return await trigger_all_scrapers()
