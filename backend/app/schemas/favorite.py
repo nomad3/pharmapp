@@ -1,12 +1,15 @@
+import uuid
+from datetime import datetime
+
 from pydantic import BaseModel
 
 class FavoriteCreate(BaseModel):
-    medication_id: str
+    medication_id: uuid.UUID
 
 class FavoriteOut(BaseModel):
-    id: str
-    medication_id: str
-    created_at: str
+    id: uuid.UUID
+    medication_id: uuid.UUID
+    created_at: datetime
 
     class Config:
         from_attributes = True

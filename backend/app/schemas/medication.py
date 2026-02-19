@@ -1,7 +1,9 @@
+import uuid
+
 from pydantic import BaseModel
 
 class MedicationOut(BaseModel):
-    id: str
+    id: uuid.UUID
     name: str
     active_ingredient: str | None
     dosage: str | None

@@ -1,7 +1,9 @@
+import uuid
+
 from pydantic import BaseModel
 
 class PharmacyOut(BaseModel):
-    id: str
+    id: uuid.UUID
     chain: str
     name: str
     address: str

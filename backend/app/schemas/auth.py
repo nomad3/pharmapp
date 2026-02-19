@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel
 
 class OtpRequest(BaseModel):
@@ -12,7 +14,7 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 class UserOut(BaseModel):
-    id: str
+    id: uuid.UUID
     phone_number: str
     name: str | None
     comuna: str | None
