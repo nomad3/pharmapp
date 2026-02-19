@@ -5,3 +5,6 @@ from app.models.delivery_address import DeliveryAddress
 from app.models.medication import Medication
 from app.models.pharmacy import Pharmacy
 from app.models.price import Price
+from app.models.order import Order
+from app.models.order_item import OrderItem
+from app.models.order_delivery import OrderDelivery
