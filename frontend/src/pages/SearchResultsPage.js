@@ -10,28 +10,56 @@ export default function SearchResultsPage() {
 
   useEffect(() => {
     if (!q) return;
+    setLoading(true);
     client.get(`/medications/search?q=${encodeURIComponent(q)}`)
       .then(({ data }) => setResults(data))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [q]);
 
-  if (loading) return <p>Buscando "{q}"...</p>;
+  if (loading) {
+    return (
+      <div className="loading-state">
+        <div className="spinner"></div>
+        <p>Buscando "{q}"...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="search-results">
-      <h2>Resultados para "{q}"</h2>
-      {results.length === 0 && <p>No se encontraron medicamentos</p>}
-      <ul>
-        {results.map((med) => (
-          <li key={med.id}>
-            <Link to={`/medication/${med.id}`}>
-              <strong>{med.name}</strong> — {med.active_ingredient} {med.dosage}
-              {med.requires_prescription && <span className="rx-badge">Receta</span>}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="container">
+        <div className="results-header">
+          <h2>Resultados para "{q}"</h2>
+          <p className="results-count">{results.length} medicamento{results.length !== 1 ? "s" : ""} encontrado{results.length !== 1 ? "s" : ""}</p>
+        </div>
+
+        {results.length === 0 ? (
+          <div className="no-results">
+            <div className="no-results-icon">🔍</div>
+            <h3>No encontramos resultados</h3>
+            <p>Intenta buscar con otro nombre o principio activo</p>
+          </div>
+        ) : (
+          <div className="results-grid">
+            {results.map((med) => (
+              <Link to={`/medication/${med.id}`} className="med-card" key={med.id}>
+                <div className="med-card-icon">💊</div>
+                <h3>{med.name}</h3>
+                <p className="med-info">{med.active_ingredient}{med.dosage ? ` · ${med.dosage}` : ""}</p>
+                <div className="med-details">
+                  {med.form && <span className="med-tag">{med.form}</span>}
+                  {med.lab && <span className="med-tag">{med.lab}</span>}
+                  {med.requires_prescription && <span className="rx-badge">Receta</span>}
+                </div>
+                <div className="view-prices">
+                  Comparar precios →
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

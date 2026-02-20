@@ -1,15 +1,40 @@
 import React from "react";
+import WhatsAppButton from "./WhatsAppButton";
 
-export default function PriceCard({ price, pharmacy, distanceKm }) {
+const CHAIN_NAMES = {
+  cruz_verde: "Cruz Verde",
+  salcobrand: "Salcobrand",
+  ahumada: "Ahumada",
+  dr_simi: "Dr. Simi",
+};
+
+export default function PriceCard({ price, pharmacy, distanceKm, isBest, onBuy }) {
   return (
-    <div className="price-card">
-      <div className="price-card-header">
-        <span className="pharmacy-chain">{pharmacy.chain}</span>
-        <span className="price">${price.toLocaleString("es-CL")}</span>
+    <div className={`price-card ${isBest ? "best-price" : ""}`}>
+      {isBest && <span className="best-badge">Mejor precio</span>}
+
+      <div className={`chain-logo ${pharmacy.chain}`}>
+        {(CHAIN_NAMES[pharmacy.chain] || pharmacy.chain).slice(0, 2).toUpperCase()}
       </div>
-      <p className="pharmacy-name">{pharmacy.name}</p>
-      <p className="pharmacy-address">{pharmacy.address}</p>
-      {distanceKm && <p className="distance">{distanceKm} km</p>}
+
+      <div className="price-info">
+        <div className="pharmacy-name">{pharmacy.name}</div>
+        <div className="pharmacy-address">{pharmacy.address}</div>
+        {distanceKm != null && (
+          <div className="distance">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {distanceKm.toFixed(1)} km
+          </div>
+        )}
+      </div>
+
+      <div className="price-amount">
+        <div className="price">${price.toLocaleString("es-CL")}</div>
+      </div>
+
+      <div className="price-actions">
+        <WhatsAppButton onClick={onBuy} />
+      </div>
     </div>
   );
 }
