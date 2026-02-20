@@ -6,9 +6,18 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_MINUTES: int = 1440
     OTP_EXPIRATION_MINUTES: int = 5
+
+    # ServiceTsunami / OpenClaw
     SERVICETSUNAMI_API_URL: str = "http://localhost:8001"
     SERVICETSUNAMI_EMAIL: str = ""
     SERVICETSUNAMI_PASSWORD: str = ""
+    SERVICETSUNAMI_AGENT_ID: str = ""
+
+    # PharmApp webhook URL (registered with ServiceTsunami for incoming WhatsApp)
+    PHARMAPP_WEBHOOK_URL: str = "http://localhost:8000/api/v1/webhooks/whatsapp"
+    PHARMAPP_WEBHOOK_SECRET: str = ""
+
+    # Payments
     MERCADOPAGO_ACCESS_TOKEN: str = ""
     TRANSBANK_COMMERCE_CODE: str = ""
     TRANSBANK_API_KEY: str = ""

@@ -6,7 +6,7 @@ from app.core.security import generate_otp, create_access_token
 from app.models.user import User
 from app.models.otp import OtpCode
 from app.schemas.auth import OtpRequest, OtpVerify, Token
-from app.services.servicetsunami import tsunami_client
+from app.services import whatsapp
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -28,10 +28,11 @@ async def request_otp(body: OtpRequest, db: Session = Depends(get_db)):
     db.add(otp)
     db.commit()
 
-    await tsunami_client.send_whatsapp(
-        body.phone_number,
-        f"Tu código de verificación PharmApp es: {code}"
-    )
+    try:
+        await whatsapp.send_otp(body.phone_number, code)
+    except Exception:
+        pass  # Log already handled in client; don't block auth if ST is down
+
     return {"message": "OTP sent via WhatsApp"}
 
 @router.post("/otp/verify", response_model=Token)

@@ -4,7 +4,7 @@ from app.models.order_item import OrderItem
 from app.models.price import Price
 from app.schemas.order import OrderCreate
 from app.services.payment_service import create_mercadopago_preference, create_transbank_transaction
-from app.services.servicetsunami import tsunami_client
+from app.services import whatsapp
 
 async def create_order(db: Session, user_id: str, phone_number: str, data: OrderCreate) -> Order:
     total = 0.0
@@ -43,10 +43,11 @@ async def create_order(db: Session, user_id: str, phone_number: str, data: Order
     db.commit()
     db.refresh(order)
 
-    await tsunami_client.send_whatsapp(
-        phone_number,
-        f"Tu pedido PharmApp #{order_id_str[:8]} por ${total:,.0f} está listo. "
-        f"Paga aquí: {order.payment_url}"
-    )
+    try:
+        await whatsapp.send_order_confirmation(
+            phone_number, order_id_str, total, order.payment_url or ""
+        )
+    except Exception:
+        pass  # Don't block order creation if WhatsApp fails
 
     return order
