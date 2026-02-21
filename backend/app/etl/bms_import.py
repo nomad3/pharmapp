@@ -12,6 +12,7 @@ Usage:
 
 import os
 import sys
+import unicodedata
 import uuid as _uuid
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
@@ -51,26 +52,37 @@ DATE_FORMATS = [
 # ---------------------------------------------------------------------------
 
 
+def _strip_accents(s: str) -> str:
+    """Remove diacritical marks (accents) from a string."""
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s)
+        if unicodedata.category(c) != "Mn"
+    )
+
+
 def find_sheet(wb, keyword: str) -> Optional[Worksheet]:
     """Find a workbook sheet whose name contains *keyword* (case-insensitive)."""
-    kw = keyword.lower()
+    kw = _strip_accents(keyword.lower())
     for name in wb.sheetnames:
-        if kw in name.lower():
+        if kw in _strip_accents(name.lower()):
             return wb[name]
     return None
 
 
-def map_headers(sheet: Worksheet) -> Dict[str, int]:
-    """Read the first row and return {normalised_header: column_index}.
+def map_headers(sheet: Worksheet, header_row: int = 1) -> Dict[str, int]:
+    """Read *header_row* (1-based) and return {normalised_header: column_index}.
 
-    Normalisation: strip whitespace, lower-case, collapse multiple spaces.
+    Normalisation: strip whitespace, lower-case, collapse multiple spaces,
+    remove accents, replace underscores with spaces.
     Column index is 0-based.
     """
     headers: Dict[str, int] = {}
-    for row in sheet.iter_rows(min_row=1, max_row=1, values_only=True):
+    for row in sheet.iter_rows(min_row=header_row, max_row=header_row, values_only=True):
         for idx, cell in enumerate(row):
             if cell is not None:
                 normalized = " ".join(str(cell).strip().lower().split())
+                normalized = _strip_accents(normalized)
+                normalized = normalized.replace("_", " ")
                 headers[normalized] = idx
     return headers
 
@@ -81,7 +93,7 @@ def _col(headers: Dict[str, int], *keywords: str) -> Optional[int]:
     when no match is found.
     """
     for kw in keywords:
-        kw_lower = kw.lower()
+        kw_lower = _strip_accents(kw.lower().replace("_", " "))
         for hdr, idx in headers.items():
             if kw_lower in hdr:
                 return idx
@@ -170,29 +182,44 @@ def _build_medication_lookup(db: Session) -> Dict[tuple, str]:
 
 
 def import_institutions(db: Session, wb) -> int:
-    """Import *Maestro Instituciones* sheet into ``bms_institutions``."""
+    """Import *Maestro Instituciones* sheet into ``bms_institutions``.
+
+    This sheet has a quirk: row 1 is data, row 2 has headers, data resumes row 3.
+    We detect this by trying row 1 then row 2 for recognizable headers.
+    """
     sheet = find_sheet(wb, "instituciones")
     if sheet is None:
         print("  [SKIP] No sheet matching 'instituciones' found.")
         return 0
 
-    headers = map_headers(sheet)
-    c_rut = _col(headers, "rut")
-    c_code = _col(headers, "código cliente", "codigo cliente", "código", "codigo")
-    c_razon = _col(headers, "razón social", "razon social")
-    c_region = _col(headers, "región", "region")
+    # Try row 1 first, then row 2 to find headers
+    headers = map_headers(sheet, header_row=1)
+    data_start = 2
+    if not any("rut" in h for h in headers):
+        headers = map_headers(sheet, header_row=2)
+        data_start = 3
+
+    # Use exact match for "cliente" to avoid matching "rut cliente"
+    c_rut = headers.get("rut cliente") or _col(headers, "rut")
+    c_code = headers.get("cliente") or _col(headers, "codigo cliente", "client code")
+    c_razon = _col(headers, "razon social")
+    c_region = _col(headers, "region")
     c_comuna = _col(headers, "comuna")
+
+    print(f"    headers detected at row {data_start - 1}: {list(headers.keys())[:5]}")
 
     db.execute(text("DELETE FROM bms_institutions"))
     db.flush()
 
     batch: List[BmsInstitution] = []
     count = 0
+    seen_ruts = set()
 
-    for row_num, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+    for row_num, row in enumerate(sheet.iter_rows(min_row=data_start, values_only=True), start=data_start):
         rut_val = _safe_str(_cell(row, c_rut))
-        if not rut_val:
+        if not rut_val or rut_val in seen_ruts:
             continue
+        seen_ruts.add(rut_val)
 
         batch.append(
             BmsInstitution(
@@ -223,37 +250,38 @@ def import_institutions(db: Session, wb) -> int:
 
 def import_distribution(db: Session, wb, med_lookup: Dict[tuple, str]) -> int:
     """Import *Data Distribución* sheet into ``bms_distributions``."""
-    sheet = find_sheet(wb, "distribución") or find_sheet(wb, "distribucion")
+    sheet = find_sheet(wb, "data distribución") or find_sheet(wb, "data distribucion") or find_sheet(wb, "distribución")
     if sheet is None:
-        print("  [SKIP] No sheet matching 'distribución/distribucion' found.")
+        print("  [SKIP] No sheet matching 'distribución' found.")
         return 0
+    print(f"    Using sheet: {sheet.title}")
 
     headers = map_headers(sheet)
 
-    c_ai = _col(headers, "principio activo")
-    c_comp = _col(headers, "composición", "composicion")
-    c_meas = _col(headers, "medida")
-    c_pcom = _col(headers, "producto comercial")
-    c_pgen = _col(headers, "producto genérico", "producto generico")
-    c_rut = _col(headers, "rut institución", "rut institucion", "rut")
-    c_dest = _col(headers, "cliente destino")
-    c_reg = _col(headers, "región", "region")
+    c_ai = _col(headers, "p activo pht", "principio activo")
+    c_comp = _col(headers, "comp pht", "composicion")
+    c_meas = _col(headers, "medida pht", "medida")
+    c_pcom = _col(headers, "nombre producto comercial", "producto comercial")
+    c_pgen = _col(headers, "nombre producto generico", "producto generico")
+    c_rut = _col(headers, "rut destinatario", "rut institucion", "rut")
+    c_dest = _col(headers, "nombre cliente destinatario", "cliente destinatario", "cliente destino")
+    c_reg = _col(headers, "nombre region", "region")
     c_com = _col(headers, "comuna")
-    c_ss = _col(headers, "servicio salud")
-    c_date = _col(headers, "fecha despacho", "fecha")
+    c_ss = _col(headers, "servicio de salud", "servicio salud")
+    c_date = _col(headers, "fecha de entrega", "fecha entrega", "fecha despacho")
     c_po = _col(headers, "orden de compra")
     c_sd = _col(headers, "documento de venta")
-    c_oq = _col(headers, "cantidad oc")
+    c_oq = _col(headers, "cantidad de pedido", "cantidad oc")
     c_uq = _col(headers, "cantidad unitaria")
-    c_upp = _col(headers, "unidades por envase")
-    c_ga = _col(headers, "monto bruto")
+    c_upp = _col(headers, "cantidad por envase", "unidades por envase")
+    c_ga = headers.get("monto bruto") or _col(headers, "monto bruto")
     c_na = _col(headers, "monto neto")
     c_gup = _col(headers, "precio unitario bruto")
     c_nup = _col(headers, "precio unitario neto")
-    c_mkt = _col(headers, "mercado")
+    c_mkt = _col(headers, "market", "mercado")
     c_bms = _col(headers, "bms/competencia", "bms")
-    c_prov = _col(headers, "proveedor")
-    c_chan = _col(headers, "canal distribución", "canal distribucion")
+    c_prov = _col(headers, "nombre proveedor", "proveedor")
+    c_chan = _col(headers, "nombre canal de distribucion", "canal distribucion")
 
     db.execute(text("DELETE FROM bms_distributions"))
     db.flush()
@@ -331,22 +359,22 @@ def import_purchase_orders(db: Session, wb) -> int:
 
     headers = map_headers(sheet)
 
-    c_pa = _col(headers, "p.activo", "pactivo", "principio activo")
-    c_pres = _col(headers, "presentación", "presentacion")
-    c_med = _col(headers, "medida")
-    c_cpht = _col(headers, "cantidad pht")
+    c_pa = _col(headers, "pactivo", "p.activo", "principio activo")
+    c_pres = _col(headers, "presentacion")
+    c_med = _col(headers, "un medida pht", "medida")
+    c_cpht = _col(headers, "cant pht", "cantidad pht")
     c_ppht = _col(headers, "precio pht")
     c_vt = _col(headers, "valor total")
-    c_fecha = _col(headers, "fecha")
-    c_inst = _col(headers, "institución", "institucion")
-    c_reg = _col(headers, "región", "region")
-    c_com = _col(headers, "comuna")
-    c_sup = _col(headers, "supplier")
-    c_corp = _col(headers, "corporación", "corporacion")
-    c_mkt = _col(headers, "mercado")
+    c_fecha = headers.get("fecha") or _col(headers, "fecha")
+    c_inst = _col(headers, "instituciones", "institucion")
+    c_reg = headers.get("region") or _col(headers, "region")
+    c_com = _col(headers, "comuna cliente", "comuna")
+    c_sup = _col(headers, "sucursal proveedor", "supplier")
+    c_corp = _col(headers, "corporacionespht", "corporacion")
+    c_mkt = _col(headers, "market", "mercado")
     c_bms = _col(headers, "bms/competencia", "bms")
     c_tipo = _col(headers, "tipo oc")
-    c_lic = _col(headers, "id licitación", "id licitacion")
+    c_lic = _col(headers, "id licitacion")
 
     db.execute(text("DELETE FROM bms_purchase_orders"))
     db.flush()
@@ -395,26 +423,27 @@ def import_purchase_orders(db: Session, wb) -> int:
 
 def import_adjudications(db: Session, wb) -> int:
     """Import *Data Adjudicaciones* sheet into ``bms_adjudications``."""
-    sheet = find_sheet(wb, "adjudicaciones")
+    sheet = find_sheet(wb, "data adjudicaciones") or find_sheet(wb, "adjudicaciones")
     if sheet is None:
         print("  [SKIP] No sheet matching 'adjudicaciones' found.")
         return 0
+    print(f"    Using sheet: {sheet.title}")
 
     headers = map_headers(sheet)
 
-    c_adq = _col(headers, "adquisición", "adquisicion")
+    c_adq = _col(headers, "adquisicion")
     c_rut = _col(headers, "rut cliente")
-    c_fecha = _col(headers, "fecha adjudicación", "fecha adjudicacion")
+    c_fecha = _col(headers, "fechaadjudicacion", "fecha adjudicacion")
     c_est = _col(headers, "estado")
-    c_pa = _col(headers, "p.activo", "pactivo", "principio activo")
-    c_comp = _col(headers, "composición", "composicion")
-    c_pres = _col(headers, "presentación", "presentacion")
-    c_pu = _col(headers, "precio unitario", "precio unit")
-    c_ca = _col(headers, "cantidad adjudicada")
+    c_pa = _col(headers, "pactivo", "p.activo", "principio activo")
+    c_comp = _col(headers, "composicion")
+    c_pres = _col(headers, "presentacion")
+    c_pu = _col(headers, "precio unit", "precio unitario")
+    c_ca = _col(headers, "cantadjudicada", "cantidad adjudicada")
     c_va = _col(headers, "valor adjudicado")
-    c_rs = _col(headers, "razón social cliente", "razon social cliente")
-    c_cp = _col(headers, "corp. proveedor", "corp proveedor")
-    c_mkt = _col(headers, "mercado")
+    c_rs = _col(headers, "razonsocialcliente", "razon social cliente")
+    c_cp = _col(headers, "corpproveedor", "corp proveedor")
+    c_mkt = _col(headers, "market", "mercado")
     c_bms = _col(headers, "bms/competencia", "bms")
 
     db.execute(text("DELETE FROM bms_adjudications"))
