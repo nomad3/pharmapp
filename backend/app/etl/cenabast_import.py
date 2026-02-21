@@ -125,17 +125,26 @@ def parse_fecha_doc(val: Any) -> Optional[date]:
     return None
 
 
+def _strip_accents(s: str) -> str:
+    """Remove diacritical marks (accents) from a string."""
+    import unicodedata
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s)
+        if unicodedata.category(c) != "Mn"
+    )
+
+
 def map_headers(sheet: Worksheet) -> Dict[str, int]:
     """Read the first row and return {normalised_header: column_index}.
 
-    Normalisation: strip whitespace, lower-case, collapse multiple spaces.
+    Normalisation: strip whitespace, lower-case, strip accents, collapse spaces.
     Column index is 0-based.
     """
     headers: Dict[str, int] = {}
     for row in sheet.iter_rows(min_row=1, max_row=1, values_only=True):
         for idx, cell in enumerate(row):
             if cell is not None:
-                normalized = " ".join(str(cell).strip().lower().split())
+                normalized = " ".join(_strip_accents(str(cell).strip().lower()).split())
                 headers[normalized] = idx
     return headers
 
@@ -219,12 +228,14 @@ def import_cenabast_products(db: Session, file_path: str) -> int:
     db.flush()
 
     batch: List[CenabastProduct] = []
+    seen_codes: set = set()
     count = 0
 
     for row_num, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
         codigo = safe_str(_cell(row, c_codigo))
-        if not codigo:
+        if not codigo or codigo in seen_codes:
             continue
+        seen_codes.add(codigo)
 
         batch.append(
             CenabastProduct(
