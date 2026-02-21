@@ -10,3 +10,9 @@ from app.models.order_item import OrderItem
 from app.models.order_delivery import OrderDelivery
 from app.models.user_favorite import UserFavorite
 from app.models.search_history import SearchHistory
+from app.models.bms_institution import BmsInstitution
+from app.models.bms_distribution import BmsDistribution
+from app.models.bms_purchase_order import BmsPurchaseOrder
+from app.models.bms_adjudication import BmsAdjudication
+from app.models.cenabast_product import CenabastProduct
+from app.models.cenabast_invoice import CenabastInvoice

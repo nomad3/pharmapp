@@ -24,6 +24,10 @@ export default function Layout({ children }) {
           )}
 
           <nav className="header-nav">
+            <Link to="/analytics" className={`nav-link ${location.pathname === "/analytics" ? "active" : ""}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              <span>Analytics</span>
+            </Link>
             <Link to="/map" className={`nav-link ${location.pathname === "/map" ? "active" : ""}`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>Farmacias</span>

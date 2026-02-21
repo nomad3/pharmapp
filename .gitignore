@@ -1,0 +1,11 @@
+# Excel data files
+backend/data/*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# OS
+.DS_Store

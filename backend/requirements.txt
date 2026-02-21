@@ -11,3 +11,4 @@ httpx
 mercadopago
 transbank-sdk
 alembic
+openpyxl

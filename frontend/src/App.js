@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import PharmacyMapPage from "./pages/PharmacyMapPage";
+import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 import "./App.css";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/map" element={<PharmacyMapPage />} />
+          <Route path="/analytics" element={<AnalyticsDashboardPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
