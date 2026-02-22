@@ -286,6 +286,107 @@ def get_cenabast_top_products(db: Session, limit: int = 20):
     return results
 
 
+def get_regional_demand_heatmap(db: Session, product: str = None):
+    """Combine CenabastInvoice + BmsDistribution by region for demand heatmap."""
+    # Chilean region populations (2024 estimates)
+    region_population = {
+        "METROPOLITANA": 8125072,
+        "VALPARAISO": 1960170,
+        "BIOBIO": 1663696,
+        "MAULE": 1131939,
+        "ARAUCANIA": 1014343,
+        "O'HIGGINS": 991063,
+        "LOS LAGOS": 891440,
+        "COQUIMBO": 836096,
+        "ANTOFAGASTA": 691854,
+        "TARAPACA": 382773,
+        "LOS RIOS": 405835,
+        "ATACAMA": 316692,
+        "NUBLE": 511551,
+        "MAGALLANES": 178362,
+        "ARICA Y PARINACOTA": 252110,
+        "AYSEN": 107334,
+    }
+
+    cenabast_q = db.query(
+        CenabastInvoice.region_solicitante.label("region"),
+        func.sum(CenabastInvoice.cantidad_unitaria).label("cenabast_units"),
+        func.sum(CenabastInvoice.monto_bruto).label("cenabast_revenue"),
+    ).filter(
+        CenabastInvoice.region_solicitante.isnot(None)
+    ).group_by(CenabastInvoice.region_solicitante)
+
+    if product:
+        cenabast_q = cenabast_q.filter(
+            CenabastInvoice.nombre_material_generico.ilike(f"%{product}%")
+        )
+
+    cenabast_data = {r.region: {"units": int(r.cenabast_units or 0), "revenue": float(r.cenabast_revenue or 0)} for r in cenabast_q.all()}
+
+    bms_q = db.query(
+        BmsDistribution.region.label("region"),
+        func.sum(BmsDistribution.unit_quantity).label("bms_units"),
+        func.sum(BmsDistribution.net_amount).label("bms_revenue"),
+    ).filter(
+        BmsDistribution.region.isnot(None)
+    ).group_by(BmsDistribution.region)
+
+    if product:
+        bms_q = bms_q.filter(BmsDistribution.active_ingredient.ilike(f"%{product}%"))
+
+    bms_data = {r.region: {"units": int(r.bms_units or 0), "revenue": float(r.bms_revenue or 0)} for r in bms_q.all()}
+
+    all_regions = set(cenabast_data.keys()) | set(bms_data.keys())
+    results = []
+    for region in all_regions:
+        cn = cenabast_data.get(region, {"units": 0, "revenue": 0})
+        bm = bms_data.get(region, {"units": 0, "revenue": 0})
+        total_units = cn["units"] + bm["units"]
+        total_revenue = cn["revenue"] + bm["revenue"]
+
+        pop = 0
+        region_upper = region.upper() if region else ""
+        for key, val in region_population.items():
+            if key in region_upper or region_upper in key:
+                pop = val
+                break
+
+        per_capita = round(total_units / pop, 2) if pop > 0 else 0
+
+        results.append({
+            "region": region,
+            "cenabast_units": cn["units"],
+            "cenabast_revenue": cn["revenue"],
+            "bms_units": bm["units"],
+            "bms_revenue": bm["revenue"],
+            "total_units": total_units,
+            "total_revenue": total_revenue,
+            "population": pop,
+            "per_capita_units": per_capita,
+        })
+
+    results.sort(key=lambda x: x["total_revenue"], reverse=True)
+    return results
+
+
+def get_underserved_regions(db: Session, product: str = None):
+    """Regions with low procurement relative to population."""
+    heatmap = get_regional_demand_heatmap(db, product=product)
+    with_pop = [r for r in heatmap if r["population"] > 0 and r["per_capita_units"] > 0]
+    if not with_pop:
+        return []
+
+    avg_per_capita = sum(r["per_capita_units"] for r in with_pop) / len(with_pop)
+
+    underserved = [
+        {**r, "vs_avg_pct": round((r["per_capita_units"] - avg_per_capita) / avg_per_capita * 100, 1)}
+        for r in with_pop
+        if r["per_capita_units"] < avg_per_capita
+    ]
+    underserved.sort(key=lambda x: x["per_capita_units"])
+    return underserved
+
+
 def get_cenabast_regional(db: Session):
     q = db.query(
         CenabastInvoice.region_solicitante.label("region"),

@@ -18,6 +18,7 @@ export default function MedicationDetailPage() {
   const [generics, setGenerics] = useState([]);
   const [alertPrice, setAlertPrice] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
+  const [cenabastCost, setCenabastCost] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -32,14 +33,29 @@ export default function MedicationDetailPage() {
     if (!location) return;
     const fetchData = async () => {
       try {
-        const { data } = await client.get(`/prices/compare?medication_id=${id}&lat=${location.lat}&lng=${location.lng}`);
+        const { data } = await client.get(`/prices/compare-transparent?medication_id=${id}&lat=${location.lat}&lng=${location.lng}`);
         setPrices(data);
-      } catch (err) { console.error("Error fetching prices:", err); }
+        if (data.length > 0 && data[0].cenabast_cost) {
+          setCenabastCost(data[0].cenabast_cost);
+        }
+      } catch (err) {
+        console.error("Error fetching prices:", err);
+        try {
+          const { data } = await client.get(`/prices/compare?medication_id=${id}&lat=${location.lat}&lng=${location.lng}`);
+          setPrices(data);
+        } catch (err2) { console.error("Error fetching fallback prices:", err2); }
+      }
       try {
         const { data } = await client.get("/medications/");
         const med = data.find(m => m.id === id);
         if (med) setMedication(med);
       } catch (err) { console.error("Error fetching medication:", err); }
+      if (!cenabastCost) {
+        try {
+          const { data } = await client.get(`/transparency/medication/${id}/cenabast-cost`);
+          if (data.avg_cenabast_cost) setCenabastCost(data.avg_cenabast_cost);
+        } catch (err) { /* no transparency data */ }
+      }
       setLoading(false);
     };
     fetchData();
@@ -111,6 +127,23 @@ export default function MedicationDetailPage() {
           </div>
         )}
 
+        {cenabastCost && prices.length > 0 && (
+          <div className="transparency-banner">
+            <div className="transparency-banner__icon">🏛️</div>
+            <div className="transparency-banner__content">
+              <div className="transparency-banner__title">Costo del Estado (Cenabast)</div>
+              <div className="transparency-banner__cost">${Math.round(cenabastCost).toLocaleString("es-CL")} CLP</div>
+              <div className="transparency-banner__desc">
+                El Estado compra este medicamento por ${Math.round(cenabastCost).toLocaleString("es-CL")} CLP.
+                {prices[0]?.price && (
+                  <span> El precio más bajo en farmacias es <strong>${Math.round(prices[0].price).toLocaleString("es-CL")} CLP</strong>
+                  {" "}({Math.round(((prices[0].price - cenabastCost) / cenabastCost) * 100)}% más caro).</span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="prices-section">
           <h2>
             📊 {prices.length} farmacia{prices.length !== 1 ? "s" : ""} con stock
@@ -124,6 +157,8 @@ export default function MedicationDetailPage() {
                 distanceKm={item.distance_km}
                 isBest={i === 0}
                 onBuy={() => handleBuy(item)}
+                markupPct={item.markup_pct}
+                isPrecioJusto={item.is_precio_justo}
               />
             ))}
           </div>

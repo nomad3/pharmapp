@@ -25,6 +25,14 @@ export default function Layout({ children }) {
           )}
 
           <nav className="header-nav">
+            <Link to="/transparency" className={`nav-link ${location.pathname === "/transparency" ? "active" : ""}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>Transparencia</span>
+            </Link>
+            <Link to="/adherence" className={`nav-link ${location.pathname.startsWith("/adherence") ? "active" : ""}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Adherencia</span>
+            </Link>
             <Link to="/analytics" className={`nav-link ${location.pathname === "/analytics" ? "active" : ""}`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
               <span>Analytics</span>
@@ -81,6 +89,7 @@ export default function Layout({ children }) {
             <div className="footer-col">
               <h4>Explorar</h4>
               <Link to="/">Inicio</Link>
+              <Link to="/transparency">Transparencia</Link>
               <Link to="/map">Mapa de farmacias</Link>
               <Link to="/favorites">Mis favoritos</Link>
             </div>
@@ -88,12 +97,14 @@ export default function Layout({ children }) {
               <h4>Cuenta</h4>
               <Link to="/login">Iniciar sesión</Link>
               <Link to="/orders">Mis pedidos</Link>
+              <Link to="/adherence">Adherencia</Link>
               <Link to="/premium">Premium</Link>
             </div>
             <div className="footer-col">
               <h4>Empresas</h4>
               <Link to="/pricing">API de datos</Link>
               <Link to="/analytics">Market intelligence</Link>
+              <Link to="/intelligence">Intelligence</Link>
             </div>
           </div>
           <div className="footer-bottom">

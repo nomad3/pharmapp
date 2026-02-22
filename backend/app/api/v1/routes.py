@@ -4,6 +4,7 @@ from app.api.v1 import (
     favorites, search_history, analytics,
     billing, organizations, api_keys, data_api,
     commissions, premium,
+    transparency, reports, gpo, adherence,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -23,6 +24,11 @@ api_router.include_router(api_keys.router)
 api_router.include_router(data_api.router)
 api_router.include_router(commissions.router)
 api_router.include_router(premium.router)
+# Business model expansion routers
+api_router.include_router(transparency.router)
+api_router.include_router(reports.router)
+api_router.include_router(gpo.router)
+api_router.include_router(adherence.router)
 
 @api_router.post("/admin/trigger-scraping")
 async def trigger_scraping():

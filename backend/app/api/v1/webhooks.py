@@ -10,6 +10,7 @@ from app.models.order import Order, OrderStatus
 from app.models.user import User
 from app.services import whatsapp
 from app.services.commission_service import record_commission
+from app.services.adherence_service import record_refill_from_order
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,12 @@ async def mercadopago_webhook(request: Request, db: Session = Depends(get_db)):
                 # Record commission
                 record_commission(db, order)
 
+                # Record adherence refill
+                try:
+                    record_refill_from_order(db, order)
+                except Exception:
+                    logger.exception("Error recording refill for order %s", order.id)
+
                 # Notify user via WhatsApp
                 user = db.query(User).filter(User.id == order.user_id).first()
                 if user:
@@ -133,6 +140,12 @@ async def transbank_webhook(request: Request, db: Session = Depends(get_db)):
 
                 # Record commission
                 record_commission(db, order)
+
+                # Record adherence refill
+                try:
+                    record_refill_from_order(db, order)
+                except Exception:
+                    logger.exception("Error recording refill for order %s", order.id)
 
                 user = db.query(User).filter(User.id == order.user_id).first()
                 if user:

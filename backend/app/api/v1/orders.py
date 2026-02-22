@@ -6,6 +6,8 @@ from app.models.user import User
 from app.models.order import Order
 from app.schemas.order import OrderCreate, OrderOut
 from app.services.order_service import create_order
+from app.services.referral_service import track_event
+from app.models.referral_event import ReferralEventType
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -16,6 +18,15 @@ async def create(
     user: User = Depends(get_current_user),
 ):
     order = await create_order(db, str(user.id), user.phone_number, body)
+
+    track_event(
+        db,
+        ReferralEventType.order_created,
+        user_id=str(user.id),
+        pharmacy_id=str(body.pharmacy_id),
+        order_id=str(order.id),
+    )
+
     return order
 
 @router.get("/{order_id}", response_model=OrderOut)

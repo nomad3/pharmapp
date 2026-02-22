@@ -82,6 +82,75 @@ async def send_price_alert(phone_number: str, medication_name: str, pharmacy_nam
     return await tsunami_client.send_whatsapp(phone_number, message)
 
 
+async def send_gpo_threshold_reached(phone_number: str, product_name: str, quantity: int, member_count: int) -> dict:
+    message = (
+        f"🤝 *PharmApp GPO — Umbral alcanzado*\n\n"
+        f"*{product_name}*: se alcanzó el mínimo de compra.\n"
+        f"Cantidad total: *{quantity:,} unidades*\n"
+        f"Miembros participantes: *{member_count}*\n\n"
+        f"Ya puedes crear la orden grupal."
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
+async def send_gpo_order_status_update(phone_number: str, order_ref: str, new_status: str) -> dict:
+    message = (
+        f"📦 *PharmApp GPO — Actualización de orden*\n\n"
+        f"Orden *{order_ref[:8]}*: estado actualizado a *{new_status}*."
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
+async def send_gpo_allocation_ready(phone_number: str, product_name: str, quantity: int, price: float) -> dict:
+    message = (
+        f"✅ *PharmApp GPO — Asignación lista*\n\n"
+        f"Tu asignación de *{product_name}* está lista:\n"
+        f"Cantidad: *{quantity:,} unidades*\n"
+        f"Precio unitario: *${price:,.0f} CLP*"
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
+async def send_refill_reminder(phone_number: str, medication_name: str, days_until: int, current_discount: float) -> dict:
+    discount_text = f" (descuento actual: {round(current_discount * 100)}%)" if current_discount > 0 else ""
+    message = (
+        f"💊 *PharmApp — Recordatorio de recarga*\n\n"
+        f"Tu recarga de *{medication_name}* vence en *{days_until} días*{discount_text}.\n\n"
+        f"Recarga a tiempo para mantener tu racha y descuento."
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
+async def send_refill_completed(phone_number: str, medication_name: str, discount_pct: float, savings: float, streak: int, next_due: str) -> dict:
+    message = (
+        f"✅ *PharmApp — Recarga completada*\n\n"
+        f"*{medication_name}*\n"
+        f"Descuento aplicado: *{round(discount_pct * 100)}%* (ahorraste *${savings:,.0f} CLP*)\n"
+        f"Racha: *{streak} recargas consecutivas*\n"
+        f"Próxima recarga: *{next_due}*"
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
+async def send_streak_broken(phone_number: str, medication_name: str, lost_discount_pct: float) -> dict:
+    message = (
+        f"⚠️ *PharmApp — Racha interrumpida*\n\n"
+        f"No recogiste tu recarga de *{medication_name}* a tiempo.\n"
+        f"Tu racha se reinició y perdiste el descuento de *{round(lost_discount_pct * 100)}%*.\n\n"
+        f"Vuelve a recargar para comenzar a acumular descuentos nuevamente."
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
+async def send_tier_upgrade(phone_number: str, medication_name: str, new_discount_pct: float, streak: int) -> dict:
+    message = (
+        f"🎉 *PharmApp — Nuevo nivel de descuento*\n\n"
+        f"¡Felicidades! Alcanzaste *{streak} recargas consecutivas* de *{medication_name}*.\n"
+        f"Tu nuevo descuento es *{round(new_discount_pct * 100)}%*."
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
 async def handle_incoming_message(sender_phone: str, message_body: str, message_id: str) -> dict:
     """
     Process an incoming WhatsApp message from a user.

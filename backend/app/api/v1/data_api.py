@@ -100,6 +100,69 @@ def get_regions(
     return svc.get_regional_distribution(db)
 
 
+@router.get("/forecasts")
+def get_forecasts(
+    days_ahead: int = Query(90, ge=1, le=365),
+    product: Optional[str] = Query(None),
+    region: Optional[str] = Query(None),
+    org=Depends(get_api_key),
+    db: Session = Depends(get_db),
+):
+    from app.services.forecasting_service import get_upcoming_opportunities
+    return get_upcoming_opportunities(db, days_ahead=days_ahead, product=product, region=region)
+
+
+@router.get("/competitive/market-share-trends")
+def get_market_share_trends(
+    product: Optional[str] = Query(None),
+    months: int = Query(24, ge=1, le=60),
+    org=Depends(get_api_key),
+    db: Session = Depends(get_db),
+):
+    from app.services.competitive_intel_service import get_market_share_trends as _get
+    return _get(db, product=product, months=months)
+
+
+@router.get("/competitive/supplier-win-rates")
+def get_supplier_win_rates(
+    supplier: Optional[str] = Query(None),
+    org=Depends(get_api_key),
+    db: Session = Depends(get_db),
+):
+    from app.services.competitive_intel_service import get_supplier_win_rates as _get
+    return _get(db, supplier=supplier)
+
+
+@router.get("/competitive/new-entrants")
+def get_new_entrants(
+    lookback_months: int = Query(6, ge=1, le=24),
+    org=Depends(get_api_key),
+    db: Session = Depends(get_db),
+):
+    from app.services.competitive_intel_service import detect_new_entrants
+    return detect_new_entrants(db, lookback_months=lookback_months)
+
+
+@router.get("/competitive/price-positioning")
+def get_price_positioning(
+    product: Optional[str] = Query(None),
+    supplier: Optional[str] = Query(None),
+    org=Depends(get_api_key),
+    db: Session = Depends(get_db),
+):
+    from app.services.competitive_intel_service import get_price_positioning as _get
+    return _get(db, product=product, supplier=supplier)
+
+
+@router.get("/regional-heatmap")
+def get_regional_heatmap(
+    product: Optional[str] = Query(None),
+    org=Depends(get_api_key),
+    db: Session = Depends(get_db),
+):
+    return svc.get_regional_demand_heatmap(db, product=product)
+
+
 @router.post("/export")
 def export_csv(
     dataset: str = Query(..., description="prices|market-share|procurement|trends|institutions|regions"),

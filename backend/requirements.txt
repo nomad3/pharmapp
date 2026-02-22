@@ -13,3 +13,4 @@ transbank-sdk
 alembic
 openpyxl
 stripe
+reportlab

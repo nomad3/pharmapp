@@ -5,13 +5,19 @@ from app.models.price import Price
 from app.schemas.order import OrderCreate
 from app.services.payment_service import create_mercadopago_preference, create_transbank_transaction
 from app.services import whatsapp
+from app.services.adherence_service import apply_adherence_discount
 
 async def create_order(db: Session, user_id: str, phone_number: str, data: OrderCreate) -> Order:
     total = 0.0
     items = []
     for item_data in data.items:
         price = db.query(Price).filter(Price.id == item_data.price_id).first()
-        subtotal = price.price * item_data.quantity
+        base_price = price.price * item_data.quantity
+
+        # Apply adherence discount if enrolled
+        discount_info = apply_adherence_discount(db, user_id, str(item_data.medication_id), base_price)
+        subtotal = discount_info["final_price"]
+
         total += subtotal
         items.append(OrderItem(
             medication_id=item_data.medication_id,
