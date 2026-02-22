@@ -23,8 +23,19 @@ export default function useAuth() {
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
+    localStorage.removeItem("org_slug");
+    localStorage.removeItem("org_id");
     setUser(null);
   }, []);
 
-  return { user, requestOtp, verifyOtp, logout };
+  const getPremiumStatus = useCallback(async () => {
+    try {
+      const { data } = await client.get("/premium/status");
+      return data;
+    } catch {
+      return { tier: "free" };
+    }
+  }, []);
+
+  return { user, requestOtp, verifyOtp, logout, getPremiumStatus };
 }

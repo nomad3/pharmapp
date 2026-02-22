@@ -12,3 +12,4 @@ mercadopago
 transbank-sdk
 alembic
 openpyxl
+stripe

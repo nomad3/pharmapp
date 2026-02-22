@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.routes import api_router
 from app.models import Base
 from app.core.database import engine
+from app.middleware.rate_limit import RateLimitMiddleware
 
 app = FastAPI(title="PharmApp API")
 
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

@@ -16,3 +16,13 @@ from app.models.bms_purchase_order import BmsPurchaseOrder
 from app.models.bms_adjudication import BmsAdjudication
 from app.models.cenabast_product import CenabastProduct
 from app.models.cenabast_invoice import CenabastInvoice
+# Monetization models
+from app.models.organization import Organization
+from app.models.org_member import OrgMember
+from app.models.subscription import Subscription
+from app.models.api_key import ApiKey
+from app.models.api_usage import ApiUsage
+from app.models.pharmacy_partner import PharmacyPartner
+from app.models.commission import Commission
+from app.models.user_subscription import UserSubscription
+from app.models.price_alert import PriceAlert

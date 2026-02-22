@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import client from "../api/client";
 import SummaryCards from "../components/charts/SummaryCards";
 import MarketShareChart from "../components/charts/MarketShareChart";
@@ -130,13 +131,20 @@ export default function AnalyticsDashboardPage() {
       <div className="container">
         <div className="analytics-header">
           <h1 className="page-title">Market Intelligence</h1>
-          <div className="analytics-tabs">
-            <button className={`tab-btn ${tab === "cenabast" ? "active" : ""}`} onClick={() => { setTab("cenabast"); setDrugFilter(""); setRegionFilter(""); }}>
-              Cenabast Farmacias
-            </button>
-            <button className={`tab-btn ${tab === "bms" ? "active" : ""}`} onClick={() => { setTab("bms"); setDrugFilter(""); setRegionFilter(""); }}>
-              BMS Oncología
-            </button>
+          <div className="analytics-header-actions">
+            <div className="analytics-tabs">
+              <button className={`tab-btn ${tab === "cenabast" ? "active" : ""}`} onClick={() => { setTab("cenabast"); setDrugFilter(""); setRegionFilter(""); }}>
+                Cenabast Farmacias
+              </button>
+              <button className={`tab-btn ${tab === "bms" ? "active" : ""}`} onClick={() => { setTab("bms"); setDrugFilter(""); setRegionFilter(""); }}>
+                BMS Oncología
+              </button>
+            </div>
+            <div className="analytics-upgrade-cta">
+              <Link to="/pricing" className="btn btn--sm btn--primary">
+                Acceso API programático
+              </Link>
+            </div>
           </div>
         </div>
 

@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     TRANSBANK_API_KEY: str = ""
     GOOGLE_MAPS_API_KEY: str = ""
 
+    # Stripe (monetization)
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_ID_PRO: str = ""
+    STRIPE_PRICE_ID_ENTERPRISE: str = ""
+    STRIPE_PRICE_ID_PREMIUM: str = ""
+
     class Config:
         env_file = ".env"
 

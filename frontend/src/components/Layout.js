@@ -6,6 +6,7 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("token");
+  const orgSlug = localStorage.getItem("org_slug");
   const isHome = location.pathname === "/";
 
   return (
@@ -28,6 +29,10 @@ export default function Layout({ children }) {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
               <span>Analytics</span>
             </Link>
+            <Link to="/pricing" className={`nav-link ${location.pathname === "/pricing" ? "active" : ""}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span>API</span>
+            </Link>
             <Link to="/map" className={`nav-link ${location.pathname === "/map" ? "active" : ""}`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>Farmacias</span>
@@ -40,8 +45,14 @@ export default function Layout({ children }) {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
               <span>Pedidos</span>
             </Link>
+            {orgSlug && (
+              <Link to={`/org/${orgSlug}`} className={`nav-link ${location.pathname.startsWith("/org/") ? "active" : ""}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Org</span>
+              </Link>
+            )}
             {token ? (
-              <button className="nav-link nav-btn" onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("user"); navigate("/"); }}>
+              <button className="nav-link nav-btn" onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("user"); localStorage.removeItem("org_slug"); localStorage.removeItem("org_id"); navigate("/"); }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 <span>Salir</span>
               </button>
@@ -77,13 +88,12 @@ export default function Layout({ children }) {
               <h4>Cuenta</h4>
               <Link to="/login">Iniciar sesión</Link>
               <Link to="/orders">Mis pedidos</Link>
+              <Link to="/premium">Premium</Link>
             </div>
             <div className="footer-col">
-              <h4>Farmacias</h4>
-              <span>Cruz Verde</span>
-              <span>Salcobrand</span>
-              <span>Ahumada</span>
-              <span>Dr. Simi</span>
+              <h4>Empresas</h4>
+              <Link to="/pricing">API de datos</Link>
+              <Link to="/analytics">Market intelligence</Link>
             </div>
           </div>
           <div className="footer-bottom">

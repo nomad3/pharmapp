@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.models.order import Order, OrderStatus
 from app.models.user import User
 from app.services import whatsapp
+from app.services.commission_service import record_commission
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,9 @@ async def mercadopago_webhook(request: Request, db: Session = Depends(get_db)):
                 order.payment_status = "approved"
                 db.commit()
 
+                # Record commission
+                record_commission(db, order)
+
                 # Notify user via WhatsApp
                 user = db.query(User).filter(User.id == order.user_id).first()
                 if user:
@@ -126,6 +130,9 @@ async def transbank_webhook(request: Request, db: Session = Depends(get_db)):
                 order.status = OrderStatus.confirmed
                 order.payment_status = "authorized"
                 db.commit()
+
+                # Record commission
+                record_commission(db, order)
 
                 user = db.query(User).filter(User.id == order.user_id).first()
                 if user:
