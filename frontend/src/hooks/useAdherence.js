@@ -14,6 +14,7 @@ export default function useAdherence() {
     } catch (e) {
       console.error("Failed to load programs", e);
     }
+    setLoading(false);
   }, []);
 
   const loadEnrollments = useCallback(async () => {
