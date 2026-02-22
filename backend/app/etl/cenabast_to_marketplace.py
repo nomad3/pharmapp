@@ -235,35 +235,38 @@ def sync_pharmacies(db: Session) -> dict:
 
 
 def sync_prices(db: Session, code_to_med_id: dict, rut_to_pharm_id: dict):
-    """Create Price records from cenabast_invoices.
+    """Create Price records using PMVP (retail price cap) from CenabastProduct.
 
-    Aggregates invoices by (product, pharmacy) to compute average prices,
-    rather than creating one price per invoice (680K would be too many).
+    Uses the precio_maximo_publico (Precio Máximo de Venta al Público) as the
+    consumer-facing price, joined with invoice data to determine which
+    pharmacies stock each product.
     """
-    # Get average price per (product_code, pharmacy_rut) from recent invoices (last 12 months)
-    price_data = db.query(
+    # Build PMVP lookup: codigo_producto → precio_maximo_publico
+    pmvp_lookup = {}
+    for prod in db.query(CenabastProduct).filter(
+        CenabastProduct.precio_maximo_publico.isnot(None),
+        CenabastProduct.precio_maximo_publico > 0,
+    ).all():
+        pmvp_lookup[prod.codigo_producto] = prod.precio_maximo_publico
+
+    print(f"  Loaded {len(pmvp_lookup)} products with PMVP prices")
+
+    # Get distinct (product, pharmacy) combinations from recent invoices
+    # This tells us which pharmacies actually stock which products
+    stock_data = db.query(
         CenabastInvoice.codigo_producto_comercial,
         CenabastInvoice.rut_cliente_solicitante,
-        func.avg(
-            CenabastInvoice.monto_bruto / func.nullif(CenabastInvoice.cantidad_unitaria, 0)
-        ).label("avg_unit_price"),
-        func.max(CenabastInvoice.cantidad_unitaria).label("has_stock"),
     ).filter(
         CenabastInvoice.codigo_producto_comercial.isnot(None),
         CenabastInvoice.rut_cliente_solicitante.isnot(None),
-        CenabastInvoice.monto_bruto.isnot(None),
-        CenabastInvoice.monto_bruto > 0,
         CenabastInvoice.cantidad_unitaria.isnot(None),
         CenabastInvoice.cantidad_unitaria > 0,
         CenabastInvoice.ano >= 2024,  # Recent data only
-    ).group_by(
-        CenabastInvoice.codigo_producto_comercial,
-        CenabastInvoice.rut_cliente_solicitante,
-    ).all()
+    ).distinct().all()
 
-    print(f"  Processing {len(price_data)} price aggregations...")
+    print(f"  Processing {len(stock_data)} product-pharmacy combinations...")
 
-    # Delete existing cenabast-sourced prices (from pharmacies with chain='cenabast')
+    # Delete existing cenabast-sourced prices
     cenabast_pharm_ids = list(rut_to_pharm_id.values())
     if cenabast_pharm_ids:
         db.query(Price).filter(Price.pharmacy_id.in_(cenabast_pharm_ids)).delete(
@@ -275,15 +278,16 @@ def sync_prices(db: Session, code_to_med_id: dict, rut_to_pharm_id: dict):
     created = 0
     skipped = 0
 
-    for row in price_data:
+    for row in stock_data:
         med_id = code_to_med_id.get(row.codigo_producto_comercial)
         pharm_id = rut_to_pharm_id.get(row.rut_cliente_solicitante)
+        pmvp = pmvp_lookup.get(row.codigo_producto_comercial)
 
-        if not med_id or not pharm_id or not row.avg_unit_price:
+        if not med_id or not pharm_id or not pmvp:
             skipped += 1
             continue
 
-        price_val = round(float(row.avg_unit_price), 0)
+        price_val = round(float(pmvp), 0)
         if price_val <= 0:
             skipped += 1
             continue
@@ -306,7 +310,7 @@ def sync_prices(db: Session, code_to_med_id: dict, rut_to_pharm_id: dict):
         db.bulk_save_objects(batch)
         db.flush()
 
-    print(f"  [OK] Prices: {created} created, {skipped} skipped")
+    print(f"  [OK] Prices: {created} created, {skipped} skipped (using PMVP retail prices)")
 
 
 def sync_all():
