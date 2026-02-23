@@ -5,6 +5,7 @@ from app.api.v1 import (
     billing, organizations, api_keys, data_api,
     commissions, premium,
     transparency, reports, gpo, adherence,
+    scraping,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -29,8 +30,5 @@ api_router.include_router(transparency.router)
 api_router.include_router(reports.router)
 api_router.include_router(gpo.router)
 api_router.include_router(adherence.router)
-
-@api_router.post("/admin/trigger-scraping")
-async def trigger_scraping():
-    from app.tasks.scraping import trigger_all_scrapers
-    return await trigger_all_scrapers()
+# Scraping
+api_router.include_router(scraping.router)

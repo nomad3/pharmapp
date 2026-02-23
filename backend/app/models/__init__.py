@@ -45,3 +45,5 @@ from app.models.adherence_refill import AdherenceRefill
 from app.models.adherence_sponsor import AdherenceSponsor
 from app.models.adherence_sponsor_charge import AdherenceSponsorCharge
 from app.models.pharmacy_discount_cap import PharmacyDiscountCap
+# Scraping
+from app.models.scrape_run import ScrapeRun
