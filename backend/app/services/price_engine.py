@@ -53,5 +53,7 @@ def compare_prices(db: Session, medication_id: str, lat: float, lng: float, radi
             seen_prices.add(p)
             unique_physical.append(row)
 
-    # Combine: online first (sorted by price), then physical (sorted by distance, deduped)
-    return online_results + unique_physical
+    # Combine and sort by price so cheapest is first (gets "Mejor precio" badge)
+    combined = online_results + unique_physical
+    combined.sort(key=lambda row: row[0].price)
+    return combined
