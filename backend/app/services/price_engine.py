@@ -44,5 +44,14 @@ def compare_prices(db: Session, medication_id: str, lat: float, lng: float, radi
         .all()
     )
 
-    # Combine: online first (sorted by price), then physical (sorted by distance)
-    return online_results + physical_results
+    # Deduplicate: for same price, keep only the closest pharmacy
+    seen_prices = set()
+    unique_physical = []
+    for row in physical_results:
+        p = row[0].price
+        if p not in seen_prices:
+            seen_prices.add(p)
+            unique_physical.append(row)
+
+    # Combine: online first (sorted by price), then physical (sorted by distance, deduped)
+    return online_results + unique_physical
