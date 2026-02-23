@@ -1,27 +1,45 @@
+import logging
+
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
+
 from app.models.order import Order, OrderStatus
 from app.models.order_item import OrderItem
 from app.models.price import Price
 from app.schemas.order import OrderCreate
 from app.services.payment_service import create_mercadopago_preference, create_transbank_transaction
-from app.services import whatsapp
 from app.services.adherence_service import apply_adherence_discount
+
+logger = logging.getLogger(__name__)
+
 
 async def create_order(db: Session, user_id: str, phone_number: str, data: OrderCreate) -> Order:
     total = 0.0
     items = []
     for item_data in data.items:
+        # Look up price — try by price_id first, fall back to medication+pharmacy match
         price = db.query(Price).filter(Price.id == item_data.price_id).first()
+        if not price:
+            price = db.query(Price).filter(
+                Price.medication_id == item_data.medication_id,
+                Price.pharmacy_id == data.pharmacy_id,
+            ).first()
+        if not price:
+            raise HTTPException(status_code=404, detail=f"Price not found for medication {item_data.medication_id}")
+
         base_price = price.price * item_data.quantity
 
         # Apply adherence discount if enrolled
-        discount_info = apply_adherence_discount(db, user_id, str(item_data.medication_id), base_price)
-        subtotal = discount_info["final_price"]
+        try:
+            discount_info = apply_adherence_discount(db, user_id, str(item_data.medication_id), base_price)
+            subtotal = discount_info["final_price"]
+        except Exception:
+            subtotal = base_price
 
         total += subtotal
         items.append(OrderItem(
             medication_id=item_data.medication_id,
-            price_id=item_data.price_id,
+            price_id=price.id,
             quantity=item_data.quantity,
             subtotal=subtotal,
         ))
@@ -40,20 +58,16 @@ async def create_order(db: Session, user_id: str, phone_number: str, data: Order
         db.add(item)
 
     order_id_str = str(order.id)
-    if data.payment_provider == "mercadopago":
-        order.payment_url = create_mercadopago_preference(order_id_str, items, total)
-    elif data.payment_provider == "transbank":
-        order.payment_url = create_transbank_transaction(order_id_str, total)
+    try:
+        if data.payment_provider == "mercadopago":
+            order.payment_url = create_mercadopago_preference(order_id_str, items, total)
+        elif data.payment_provider == "transbank":
+            order.payment_url = create_transbank_transaction(order_id_str, total)
+    except Exception as e:
+        logger.warning("Payment provider error (order still created): %s", e)
 
     order.status = OrderStatus.payment_sent
     db.commit()
     db.refresh(order)
-
-    try:
-        await whatsapp.send_order_confirmation(
-            phone_number, order_id_str, total, order.payment_url or ""
-        )
-    except Exception:
-        pass  # Don't block order creation if WhatsApp fails
 
     return order

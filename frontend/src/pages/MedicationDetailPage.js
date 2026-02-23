@@ -71,19 +71,18 @@ export default function MedicationDetailPage() {
       .catch(() => {});
   }, [isPremium, id]);
 
-  const handleBuy = async (priceItem) => {
+  const handleBuy = (priceItem) => {
     const token = localStorage.getItem("token");
     if (!token) { navigate("/login"); return; }
-    try {
-      const { data } = await client.post("/orders", {
-        pharmacy_id: priceItem.pharmacy.id,
-        items: [{ medication_id: id, price_id: priceItem.pharmacy.id, quantity: 1 }],
-        payment_provider: "mercadopago",
-      });
-      if (data.payment_url) window.location.href = data.payment_url;
-    } catch (err) {
-      console.error("Error creating order:", err);
-    }
+    const params = new URLSearchParams({
+      pharmacy_id: priceItem.pharmacy.id,
+      medication_id: id,
+      price: priceItem.price,
+      pharmacy_name: priceItem.pharmacy.name,
+      medication_name: medication?.name || "",
+      is_online: priceItem.is_online ? "true" : "false",
+    });
+    navigate(`/checkout?${params.toString()}`);
   };
 
   const handleSetAlert = async () => {
@@ -159,6 +158,7 @@ export default function MedicationDetailPage() {
                 onBuy={() => handleBuy(item)}
                 markupPct={item.markup_pct}
                 isPrecioJusto={item.is_precio_justo}
+                isOnline={item.is_online}
               />
             ))}
           </div>

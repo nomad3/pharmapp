@@ -8,7 +8,7 @@ export default function OrderHistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    client.get("/orders")
+    client.get("/orders/")
       .then(({ data }) => setOrders(data))
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -38,7 +38,7 @@ export default function OrderHistoryPage() {
         ) : (
           <div className="order-list">
             {orders.map((order) => (
-              <div key={order.id} className="order-card">
+              <Link key={order.id} to={`/orders/${order.id}`} className="order-card" style={{ textDecoration: "none", color: "inherit" }}>
                 <div className="order-card-info">
                   <h3>Pedido #{order.id.slice(0, 8)}</h3>
                   <span className="order-date">
@@ -49,7 +49,7 @@ export default function OrderHistoryPage() {
                   <span className="order-total">${order.total.toLocaleString("es-CL")}</span>
                   <OrderStatusBadge status={order.status} />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

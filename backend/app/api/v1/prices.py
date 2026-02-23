@@ -22,7 +22,8 @@ def compare(
     items = []
     for price, pharmacy, distance_m in results:
         pharmacy_out = PharmacyOut.model_validate(pharmacy)
-        pharmacy_out.distance_km = round(distance_m / 1000, 2)
+        is_online = pharmacy.address == "Venta online"
+        pharmacy_out.distance_km = None if is_online else round(distance_m / 1000, 2)
         items.append(PriceCompareItem(
             price=price.price,
             in_stock=price.in_stock,
@@ -50,7 +51,8 @@ def compare_transparent(
     items = []
     for price, pharmacy, distance_m in results:
         pharmacy_out = PharmacyOut.model_validate(pharmacy)
-        pharmacy_out.distance_km = round(distance_m / 1000, 2)
+        is_online = pharmacy.address == "Venta online"
+        pharmacy_out.distance_km = None if is_online else round(distance_m / 1000, 2)
 
         markup_pct = None
         is_precio_justo = None
@@ -63,6 +65,7 @@ def compare_transparent(
             "in_stock": price.in_stock,
             "pharmacy": pharmacy_out.model_dump(),
             "distance_km": pharmacy_out.distance_km,
+            "is_online": is_online,
             "cenabast_cost": cenabast_cost,
             "markup_pct": markup_pct,
             "is_precio_justo": is_precio_justo,

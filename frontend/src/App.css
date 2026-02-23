@@ -3575,3 +3575,201 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   CHECKOUT PAGE
+   ============================================ */
+
+.checkout-page { padding: 2rem 0; }
+.checkout-page h1 { margin-bottom: 1.5rem; }
+
+.checkout-section {
+  margin-bottom: 1.5rem;
+}
+.checkout-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.checkout-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.checkout-item__name { font-weight: 600; font-size: 1.1rem; }
+.checkout-item__pharmacy { color: #666; margin-top: 0.25rem; }
+.checkout-item__price { margin-top: 0.5rem; color: #374151; }
+
+.online-tag {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+}
+
+.checkout-quantity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+.checkout-quantity label { font-weight: 500; }
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.quantity-value { font-weight: 600; font-size: 1.1rem; min-width: 2rem; text-align: center; }
+
+.checkout-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+  font-weight: 600;
+}
+.checkout-total__amount { font-size: 1.25rem; color: #059669; }
+
+/* Address selection */
+.address-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+.address-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.address-option.selected { border-color: #059669; background: #f0fdf4; }
+.address-option input[type="radio"] { margin-top: 3px; }
+.address-option__label { font-weight: 600; }
+.address-option__detail { color: #666; font-size: 0.9rem; }
+.address-option__instructions { color: #9ca3af; font-size: 0.8rem; font-style: italic; }
+
+.new-address-form { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+.new-address-actions { display: flex; gap: 0.5rem; }
+
+/* Payment method */
+.payment-options { display: flex; flex-direction: column; gap: 0.5rem; }
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.payment-option.selected { border-color: #059669; background: #f0fdf4; }
+.payment-option input[type="radio"] { margin-top: 0; }
+.payment-option__name { font-weight: 600; }
+.payment-option__desc { color: #666; font-size: 0.85rem; }
+
+.checkout-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.checkout-confirm {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+/* Buy button */
+.buy-button { white-space: nowrap; }
+
+/* Online pharmacy badge in price card */
+.online-badge { color: #1d4ed8; font-weight: 500; }
+
+/* ============================================
+   ORDER DETAIL PAGE
+   ============================================ */
+
+.order-detail-page { padding: 2rem 0; }
+.order-detail-page h1 { margin-bottom: 0.5rem; }
+
+.order-section { margin-top: 1.5rem; }
+.order-section h2 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.order-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+.order-card__name { font-weight: 600; }
+.order-card__detail { color: #666; font-size: 0.9rem; }
+
+.order-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.order-item:last-child { border-bottom: none; }
+.order-item__name { font-weight: 500; }
+.order-item__meta {
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+.order-item__price { font-weight: 600; color: #059669; }
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 1rem 0;
+}
+.order-total__amount { color: #059669; font-size: 1.25rem; }
+
+.order-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* Payment banners */
+.payment-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+.payment-banner--success { background: #f0fdf4; border: 1px solid #86efac; }
+.payment-banner--failure { background: #fef2f2; border: 1px solid #fca5a5; }
+.payment-banner--pending { background: #fffbeb; border: 1px solid #fde68a; }
+.payment-banner__icon { font-size: 1.5rem; }
+.payment-banner__title { font-weight: 600; }
+.payment-banner__desc { color: #666; font-size: 0.9rem; }

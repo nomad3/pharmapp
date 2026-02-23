@@ -30,6 +30,9 @@ import AdherenceProgramsPage from "./pages/AdherenceProgramsPage";
 import AdherenceDashboardPage from "./pages/AdherenceDashboardPage";
 import AdherenceEnrollmentDetailPage from "./pages/AdherenceEnrollmentDetailPage";
 import AdherenceSponsorPage from "./pages/AdherenceSponsorPage";
+// Checkout flow
+import CheckoutPage from "./pages/CheckoutPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
 import "./App.css";
 
 function App() {
@@ -41,7 +44,9 @@ function App() {
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/medication/:id" element={<MedicationDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/map" element={<PharmacyMapPage />} />
           <Route path="/analytics" element={<AnalyticsDashboardPage />} />

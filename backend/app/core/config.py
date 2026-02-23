@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     TRANSBANK_API_KEY: str = ""
     GOOGLE_MAPS_API_KEY: str = ""
 
+    # Frontend URL (for payment redirect back URLs)
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # Stripe (monetization)
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""

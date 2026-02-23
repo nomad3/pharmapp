@@ -5,7 +5,7 @@ from app.api.v1 import (
     billing, organizations, api_keys, data_api,
     commissions, premium,
     transparency, reports, gpo, adherence,
-    scraping,
+    scraping, addresses,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -32,3 +32,5 @@ api_router.include_router(gpo.router)
 api_router.include_router(adherence.router)
 # Scraping
 api_router.include_router(scraping.router)
+# Checkout
+api_router.include_router(addresses.router)
