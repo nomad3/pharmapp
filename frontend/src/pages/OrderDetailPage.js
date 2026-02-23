@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import client from "../api/client";
 import OrderStatusBadge from "../components/OrderStatusBadge";
@@ -43,6 +44,10 @@ export default function OrderDetailPage() {
 
   return (
     <div className="order-detail-page">
+      <Helmet>
+        <title>{`Orden #${id?.slice(0, 8)} | PharmApp`}</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <div className="container">
         {/* Payment result banner */}
         {paymentStatus === "success" && (

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
@@ -35,6 +35,11 @@ import CheckoutPage from "./pages/CheckoutPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import "./App.css";
 
+function MedicationRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/medicamento/${id}`} replace />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -42,7 +47,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchResultsPage />} />
-          <Route path="/medication/:id" element={<MedicationDetailPage />} />
+          <Route path="/medicamento/:slug" element={<MedicationDetailPage />} />
+          <Route path="/medication/:id" element={<MedicationRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />

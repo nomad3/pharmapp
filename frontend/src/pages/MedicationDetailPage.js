@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import client from "../api/client";
 import useGeolocation from "../hooks/useGeolocation";
 import PriceCard from "../components/PriceCard";
@@ -7,11 +8,12 @@ import PremiumGate from "../components/PremiumGate";
 import PriceHistoryChart from "../components/charts/PriceHistoryChart";
 
 export default function MedicationDetailPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { location } = useGeolocation();
   const [prices, setPrices] = useState([]);
   const [medication, setMedication] = useState(null);
+  const [medId, setMedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
   const [priceHistory, setPriceHistory] = useState([]);
@@ -19,6 +21,16 @@ export default function MedicationDetailPage() {
   const [alertPrice, setAlertPrice] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
   const [cenabastCost, setCenabastCost] = useState(null);
+
+  useEffect(() => {
+    if (!slug) return;
+    client.get(`/medications/${slug}`)
+      .then(({ data }) => {
+        setMedication(data);
+        setMedId(data.id);
+      })
+      .catch((err) => console.error("Error fetching medication:", err));
+  }, [slug]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -30,10 +42,10 @@ export default function MedicationDetailPage() {
   }, []);
 
   useEffect(() => {
-    if (!location) return;
+    if (!location || !medId) return;
     const fetchData = async () => {
       try {
-        const { data } = await client.get(`/prices/compare-transparent?medication_id=${id}&lat=${location.lat}&lng=${location.lng}`);
+        const { data } = await client.get(`/prices/compare-transparent?medication_id=${medId}&lat=${location.lat}&lng=${location.lng}`);
         setPrices(data);
         if (data.length > 0 && data[0].cenabast_cost) {
           setCenabastCost(data[0].cenabast_cost);
@@ -41,42 +53,35 @@ export default function MedicationDetailPage() {
       } catch (err) {
         console.error("Error fetching prices:", err);
         try {
-          const { data } = await client.get(`/prices/compare?medication_id=${id}&lat=${location.lat}&lng=${location.lng}`);
+          const { data } = await client.get(`/prices/compare?medication_id=${medId}&lat=${location.lat}&lng=${location.lng}`);
           setPrices(data);
         } catch (err2) { console.error("Error fetching fallback prices:", err2); }
       }
       try {
-        const { data } = await client.get("/medications/");
-        const med = data.find(m => m.id === id);
-        if (med) setMedication(med);
-      } catch (err) { console.error("Error fetching medication:", err); }
-      if (!cenabastCost) {
-        try {
-          const { data } = await client.get(`/transparency/medication/${id}/cenabast-cost`);
-          if (data.avg_cenabast_cost) setCenabastCost(data.avg_cenabast_cost);
-        } catch (err) { /* no transparency data */ }
-      }
+        const { data } = await client.get(`/transparency/medication/${medId}/cenabast-cost`);
+        if (data.avg_cenabast_cost) setCenabastCost(data.avg_cenabast_cost);
+      } catch (err) { /* no transparency data */ }
       setLoading(false);
     };
     fetchData();
-  }, [id, location]);
+  }, [medId, location]);
 
   useEffect(() => {
-    if (!isPremium || !id) return;
-    client.get(`/premium/price-history/${id}`)
+    if (!isPremium || !medId) return;
+    client.get(`/premium/price-history/${medId}`)
       .then(({ data }) => setPriceHistory(data))
       .catch(() => {});
-    client.get(`/premium/generics/${id}`)
+    client.get(`/premium/generics/${medId}`)
       .then(({ data }) => setGenerics(data))
       .catch(() => {});
-  }, [isPremium, id]);
+  }, [isPremium, medId]);
 
   const handleBuy = (priceItem) => {
     const token = localStorage.getItem("token");
     if (!token) { navigate("/login"); return; }
     const params = new URLSearchParams({
       pharmacy_id: priceItem.pharmacy.id,
-      medication_id: id,
+      medication_id: medId,
       price: priceItem.price,
       pharmacy_name: priceItem.pharmacy.name,
       medication_name: medication?.name || "",
@@ -91,7 +96,7 @@ export default function MedicationDetailPage() {
     if (!token) { navigate("/login"); return; }
     try {
       await client.post("/premium/alerts", {
-        medication_id: id,
+        medication_id: medId,
         target_price: parseFloat(alertPrice),
       });
       setAlertMsg("Alerta creada. Te avisaremos por WhatsApp.");
@@ -112,6 +117,32 @@ export default function MedicationDetailPage() {
 
   return (
     <div className="medication-detail">
+      <Helmet>
+        <title>{`${medication?.name || "Medicamento"} — Precios en farmacias | PharmApp`}</title>
+        <meta name="description" content={`Compara precios de ${medication?.name || "medicamento"} en farmacias de Chile. ${prices.length} farmacias con stock.`} />
+        <link rel="canonical" href={`https://pharmapp.cl/medicamento/${slug}`} />
+        <meta property="og:title" content={`${medication?.name || "Medicamento"} — PharmApp`} />
+        <meta property="og:description" content={`Compara precios de ${medication?.name || "medicamento"} en farmacias de Chile.`} />
+        <meta property="og:type" content="product" />
+        <meta property="og:locale" content="es_CL" />
+        {medication && prices.length > 0 && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              "name": medication.name,
+              "description": `${medication.active_ingredient || ""} ${medication.dosage || ""} ${medication.form || ""}`.trim(),
+              "offers": {
+                "@type": "AggregateOffer",
+                "priceCurrency": "CLP",
+                "lowPrice": Math.round(prices[0]?.price),
+                "highPrice": Math.round(prices[prices.length - 1]?.price),
+                "offerCount": prices.length,
+              },
+            })}
+          </script>
+        )}
+      </Helmet>
       <div className="container">
         {medication && (
           <div className="med-detail-header">
@@ -199,7 +230,7 @@ export default function MedicationDetailPage() {
             ) : (
               <div className="generics-list">
                 {generics.map((g) => (
-                  <div key={g.id} className="generic-card" onClick={() => navigate(`/medication/${g.id}`)}>
+                  <div key={g.id} className="generic-card" onClick={() => navigate(`/medicamento/${g.slug || g.id}`)}>
                     <div className="generic-card__name">{g.name}</div>
                     <div className="generic-card__meta">
                       {g.lab && <span>{g.lab}</span>}

@@ -23,6 +23,7 @@ def compare_prices(db: Session, medication_id: str, lat: float, lng: float, radi
         .filter(
             Price.medication_id == medication_id,
             Price.in_stock == True,
+            Pharmacy.is_retail == True,
             Pharmacy.address == "Venta online",
         )
         .order_by(Price.price.asc())
@@ -36,6 +37,7 @@ def compare_prices(db: Session, medication_id: str, lat: float, lng: float, radi
         .filter(
             Price.medication_id == medication_id,
             Price.in_stock == True,
+            Pharmacy.is_retail == True,
             Pharmacy.address != "Venta online",
             ST_Distance(Pharmacy.location, func.cast(user_point, Geography)) <= radius_km * 1000,
         )

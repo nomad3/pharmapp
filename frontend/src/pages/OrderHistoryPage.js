@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import client from "../api/client";
 import OrderStatusBadge from "../components/OrderStatusBadge";
@@ -25,6 +26,10 @@ export default function OrderHistoryPage() {
 
   return (
     <div className="order-history">
+      <Helmet>
+        <title>Mis pedidos | PharmApp</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <div className="container">
         <h2 className="page-title">Mis pedidos</h2>
 

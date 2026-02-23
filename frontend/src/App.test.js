@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
+import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('renders PharmApp homepage', () => {
+  render(
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  );
+  const heading = screen.getByText(/compara precios de medicamentos/i);
+  expect(heading).toBeInTheDocument();
 });

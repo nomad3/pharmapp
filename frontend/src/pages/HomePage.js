@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 import useGeolocation from "../hooks/useGeolocation";
@@ -15,6 +16,10 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
+      <Helmet>
+        <title>PharmApp — Compara precios de medicamentos en Chile</title>
+        <meta name="description" content="Compara precios de medicamentos en farmacias de Chile. Encuentra el mejor precio cerca de ti y compra por WhatsApp." />
+      </Helmet>
       <section className="home-hero">
         <div className="container">
           <h1>Compara precios de medicamentos</h1>

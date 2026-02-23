@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 import MarkupChart from "../components/charts/MarkupChart";
@@ -40,6 +41,10 @@ export default function TransparencyPage() {
 
   return (
     <div className="transparency-page">
+      <Helmet>
+        <title>Transparencia de precios | PharmApp</title>
+        <meta name="description" content="Compara precios de Cenabast vs farmacias. Descubre cuánto margen cobran las cadenas sobre el costo del Estado." />
+      </Helmet>
       <div className="container">
         <div className="transparency-hero">
           <h1>Transparencia de Precios</h1>

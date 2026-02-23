@@ -31,6 +31,7 @@ class GenericAlternative(BaseModel):
     name: str
     active_ingredient: Optional[str] = None
     lab: Optional[str] = None
+    slug: Optional[str] = None
     min_price: Optional[float] = None
 
 

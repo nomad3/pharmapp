@@ -9,6 +9,7 @@ class MedicationOut(BaseModel):
     dosage: str | None
     form: str | None
     lab: str | None
+    slug: str | None = None
     isp_registry_number: str | None
     requires_prescription: bool
 

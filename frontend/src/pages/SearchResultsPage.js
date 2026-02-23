@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useSearchParams, Link } from "react-router-dom";
 import client from "../api/client";
 
@@ -28,6 +29,10 @@ export default function SearchResultsPage() {
 
   return (
     <div className="search-results">
+      <Helmet>
+        <title>{`"${q}" — Buscar medicamentos | PharmApp`}</title>
+        <meta name="description" content={`${results.length} resultados para "${q}" en farmacias de Chile.`} />
+      </Helmet>
       <div className="container">
         <div className="results-header">
           <h2>Resultados para "{q}"</h2>
@@ -43,7 +48,7 @@ export default function SearchResultsPage() {
         ) : (
           <div className="results-grid">
             {results.map((med) => (
-              <Link to={`/medication/${med.id}`} className="med-card" key={med.id}>
+              <Link to={`/medicamento/${med.slug || med.id}`} className="med-card" key={med.id}>
                 <div className="med-card-icon">💊</div>
                 <h3>{med.name}</h3>
                 <p className="med-info">{med.active_ingredient}{med.dosage ? ` · ${med.dosage}` : ""}</p>

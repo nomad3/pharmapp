@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Boolean, Column, String
 from geoalchemy2 import Geography
 from app.models.base import Base, TimestampMixin
 
@@ -11,3 +11,4 @@ class Pharmacy(TimestampMixin, Base):
     location = Column(Geography(geometry_type="POINT", srid=4326), nullable=False)
     phone = Column(String, nullable=True)
     hours = Column(String, nullable=True)
+    is_retail = Column(Boolean, default=True, server_default="true")

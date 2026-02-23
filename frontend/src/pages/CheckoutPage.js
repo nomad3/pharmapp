@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import client from "../api/client";
 
@@ -78,6 +79,10 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-page">
+      <Helmet>
+        <title>Confirmar compra | PharmApp</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <div className="container">
         <h1>Confirmar compra</h1>
 
