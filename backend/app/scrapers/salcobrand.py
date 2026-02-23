@@ -24,24 +24,29 @@ class SalcobrandScraper(BaseScraper):
                 headers=headers,
                 json={"params": f"query={query}&hitsPerPage=50"},
             )
-            data = resp.json()
+            data = self._safe_json(resp)
+            if not data:
+                return []
             for hit in data.get("hits", []):
-                price = hit.get("price", 0) or hit.get("sale_price", 0)
-                if price <= 0:
-                    continue
+                try:
+                    price = hit.get("price", 0) or hit.get("sale_price", 0)
+                    if price <= 0:
+                        continue
 
-                compare_price = hit.get("compare_at_price", 0)
-                slug = hit.get("slug", hit.get("objectID", ""))
+                    compare_price = hit.get("compare_at_price", 0)
+                    slug = hit.get("slug", hit.get("objectID", ""))
 
-                results.append(ScrapedProduct(
-                    chain=self.CHAIN,
-                    name=hit.get("name", "") or hit.get("title", ""),
-                    lab=hit.get("laboratory", "") or hit.get("brand", ""),
-                    price=price,
-                    original_price=compare_price if compare_price and compare_price > price else None,
-                    in_stock=hit.get("in_stock", True),
-                    source_url=f"https://salcobrand.cl/product/{slug}",
-                    sku=str(hit.get("objectID", "")),
-                    requires_prescription=bool(hit.get("recipe") or hit.get("requires_prescription")),
-                ))
+                    results.append(ScrapedProduct(
+                        chain=self.CHAIN,
+                        name=hit.get("name", "") or hit.get("title", ""),
+                        lab=hit.get("laboratory", "") or hit.get("brand", ""),
+                        price=price,
+                        original_price=compare_price if compare_price and compare_price > price else None,
+                        in_stock=hit.get("in_stock", True),
+                        source_url=f"https://salcobrand.cl/product/{slug}",
+                        sku=str(hit.get("objectID", "")),
+                        requires_prescription=bool(hit.get("recipe") or hit.get("requires_prescription")),
+                    ))
+                except Exception as e:
+                    self.logger.warning("Skipping malformed Salcobrand hit: %s", e)
         return results

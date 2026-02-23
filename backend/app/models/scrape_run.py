@@ -8,6 +8,7 @@ class ScrapeRun(TimestampMixin, Base):
 
     chain = Column(String, nullable=False, index=True)
     status = Column(String, default="running")
+    run_type = Column(String, default="products", server_default="products")
     queries_total = Column(Integer, default=0)
     queries_completed = Column(Integer, default=0)
     products_found = Column(Integer, default=0)

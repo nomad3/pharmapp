@@ -14,3 +14,4 @@ alembic
 openpyxl
 stripe
 reportlab
+beautifulsoup4

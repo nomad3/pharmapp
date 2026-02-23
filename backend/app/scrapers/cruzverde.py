@@ -11,33 +11,41 @@ class CruzVerdeScraper(BaseScraper):
     async def search(self, query: str) -> list[ScrapedProduct]:
         results = []
         async with httpx.AsyncClient(timeout=30) as client:
-            resp = await self._get_with_retry(
-                client,
-                self.API_URL,
-                params={
-                    "q": query,
-                    "client_id": self.CLIENT_ID,
-                    "count": 25,
-                    "expand": "prices,availability,images",
-                },
-            )
-            data = resp.json()
+            try:
+                resp = await self._get_with_retry(
+                    client,
+                    self.API_URL,
+                    params={
+                        "q": query,
+                        "client_id": self.CLIENT_ID,
+                        "count": 25,
+                        "expand": "prices,availability,images",
+                    },
+                )
+            except httpx.HTTPStatusError:
+                return []
+            data = self._safe_json(resp)
+            if not data:
+                return []
             for hit in data.get("hits", []):
-                price = hit.get("price", 0)
-                if price <= 0:
-                    continue
+                try:
+                    price = hit.get("price", 0)
+                    if price <= 0:
+                        continue
 
-                image = hit.get("image")
-                image_url = image.get("link", "") if isinstance(image, dict) else ""
+                    image = hit.get("image")
+                    image_url = image.get("link", "") if isinstance(image, dict) else ""
 
-                results.append(ScrapedProduct(
-                    chain=self.CHAIN,
-                    name=hit.get("product_name", ""),
-                    lab=hit.get("c_brand", "") or hit.get("brand", ""),
-                    price=price,
-                    in_stock=hit.get("orderable", False),
-                    source_url=f"https://www.cruzverde.cl/{hit.get('product_id', '')}",
-                    sku=hit.get("product_id", ""),
-                    image_url=image_url,
-                ))
+                    results.append(ScrapedProduct(
+                        chain=self.CHAIN,
+                        name=hit.get("product_name", ""),
+                        lab=hit.get("c_brand", "") or hit.get("brand", ""),
+                        price=price,
+                        in_stock=hit.get("orderable", False),
+                        source_url=f"https://www.cruzverde.cl/{hit.get('product_id', '')}",
+                        sku=hit.get("product_id", ""),
+                        image_url=image_url,
+                    ))
+                except Exception as e:
+                    self.logger.warning("Skipping malformed Cruz Verde hit: %s", e)
         return results

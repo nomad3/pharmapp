@@ -20,36 +20,42 @@ class DrSimiScraper(BaseScraper):
                 if e.response.status_code == 400:
                     return []  # VTEX returns 400 for queries it can't parse
                 raise
-            for product in resp.json():
-                for item in product.get("items", []):
-                    sellers = item.get("sellers") or [{}]
-                    offer = sellers[0].get("commertialOffer", {})
-                    price = offer.get("Price", 0)
-                    list_price = offer.get("ListPrice", 0)
-                    available = offer.get("AvailableQuantity", 0) > 0
-                    if price <= 0:
-                        continue
+            data = self._safe_json(resp)
+            if not data:
+                return []
+            for product in data:
+                try:
+                    for item in product.get("items", []):
+                        sellers = item.get("sellers") or [{}]
+                        offer = sellers[0].get("commertialOffer", {})
+                        price = offer.get("Price", 0)
+                        list_price = offer.get("ListPrice", 0)
+                        available = offer.get("AvailableQuantity", 0) > 0
+                        if price <= 0:
+                            continue
 
-                    # Extract active ingredient from VTEX product specs
-                    principio = product.get("Principio Activo")
-                    active_ingredient = principio[0] if isinstance(principio, list) and principio else None
+                        # Extract active ingredient from VTEX product specs
+                        principio = product.get("Principio Activo")
+                        active_ingredient = principio[0] if isinstance(principio, list) and principio else None
 
-                    # Check prescription requirement
-                    receta = product.get("Receta Medica")
-                    needs_rx = receta[0] != "No" if isinstance(receta, list) and receta else False
+                        # Check prescription requirement
+                        receta = product.get("Receta Medica")
+                        needs_rx = receta[0] != "No" if isinstance(receta, list) and receta else False
 
-                    images = item.get("images") or [{}]
-                    results.append(ScrapedProduct(
-                        chain=self.CHAIN,
-                        name=product.get("productName", ""),
-                        active_ingredient=active_ingredient,
-                        lab=product.get("brand", ""),
-                        price=price,
-                        original_price=list_price if list_price > price else None,
-                        in_stock=available,
-                        source_url=f"{self.BASE_URL}{product.get('link', '')}",
-                        sku=item.get("itemId", ""),
-                        image_url=images[0].get("imageUrl", ""),
-                        requires_prescription=needs_rx,
-                    ))
+                        images = item.get("images") or [{}]
+                        results.append(ScrapedProduct(
+                            chain=self.CHAIN,
+                            name=product.get("productName", ""),
+                            active_ingredient=active_ingredient,
+                            lab=product.get("brand", ""),
+                            price=price,
+                            original_price=list_price if list_price > price else None,
+                            in_stock=available,
+                            source_url=f"{self.BASE_URL}{product.get('link', '')}",
+                            sku=item.get("itemId", ""),
+                            image_url=images[0].get("imageUrl", ""),
+                            requires_prescription=needs_rx,
+                        ))
+                except Exception as e:
+                    self.logger.warning("Skipping malformed Dr. Simi product: %s", e)
         return results

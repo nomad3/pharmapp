@@ -64,3 +64,13 @@ def get_scrape_run(run_id: str, db: Session = Depends(get_db)):
         "started_at": str(run.started_at),
         "finished_at": str(run.finished_at) if run.finished_at else None,
     }
+
+
+@router.post("/locations")
+async def trigger_location_scrape(
+    chains: list[str] | None = Query(None),
+):
+    """Trigger a location scraping run in background."""
+    from app.tasks.scraping import run_location_scrape_with_session
+    asyncio.create_task(run_location_scrape_with_session(chains))
+    return {"status": "started", "type": "locations", "chains": chains or ["all"]}
