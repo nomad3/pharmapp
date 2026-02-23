@@ -1,4 +1,6 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Query
+import asyncio
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
 from app.models.scrape_run import ScrapeRun
@@ -8,13 +10,12 @@ router = APIRouter(prefix="/scraping", tags=["scraping"])
 
 @router.post("/run")
 async def trigger_scrape(
-    background_tasks: BackgroundTasks,
     chains: list[str] | None = Query(None),
     query_limit: int = Query(200, ge=1, le=1000),
 ):
-    """Trigger a scraping run. Runs in background with its own DB session."""
+    """Trigger a scraping run in background via asyncio task."""
     from app.tasks.scraping import run_scrape_with_session
-    background_tasks.add_task(run_scrape_with_session, chains, query_limit)
+    asyncio.create_task(run_scrape_with_session(chains, query_limit))
     return {"status": "started", "chains": chains or ["all"], "query_limit": query_limit}
 
 
