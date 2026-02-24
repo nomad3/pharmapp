@@ -30,6 +30,11 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/pharmapp
       SERVICETSUNAMI_API_URL: http://host.docker.internal:8001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - pharmapp_net
 

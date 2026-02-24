@@ -1,17 +1,21 @@
 import logging
+from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from app.api.v1.routes import api_router
 from app.models import Base
 from app.core.database import engine
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.request_id import RequestIdMiddleware
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Remedia API")
 
 app.add_middleware(RateLimitMiddleware)
+app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,6 +25,35 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+
+
+@app.get("/health")
+def health_check():
+    """Health check for monitoring and Docker."""
+    from app.core.database import SessionLocal
+    from app.models.scrape_run import ScrapeRun
+
+    db_ok = False
+    scrape_age_hours = None
+
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db_ok = True
+
+        last_scrape = db.query(ScrapeRun).order_by(ScrapeRun.finished_at.desc()).first()
+        if last_scrape and last_scrape.finished_at:
+            age = (datetime.now(timezone.utc) - last_scrape.finished_at).total_seconds()
+            scrape_age_hours = round(age / 3600, 1)
+        db.close()
+    except Exception:
+        pass
+
+    return {
+        "status": "healthy" if db_ok else "unhealthy",
+        "database": "ok" if db_ok else "error",
+        "last_scrape_hours_ago": scrape_age_hours,
+    }
 
 
 @app.on_event("startup")
