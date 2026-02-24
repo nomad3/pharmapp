@@ -63,6 +63,13 @@ def verify_otp(body: OtpVerify, db: Session = Depends(get_db)):
     return Token(access_token=token)
 
 
+@router.post("/refresh")
+def refresh_token(user: User = Depends(get_current_user)):
+    """Issue a new JWT if the current one is still valid."""
+    new_token = create_access_token(str(user.id))
+    return {"access_token": new_token}
+
+
 @router.get("/profile")
 def get_profile(user: User = Depends(get_current_user)):
     return {
