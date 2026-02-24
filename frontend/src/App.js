@@ -42,6 +42,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminScrapingPage from "./pages/admin/AdminScrapingPage";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import "./App.css";
 
 function MedicationRedirect() {
@@ -95,6 +96,7 @@ function App() {
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/admin/scraping" element={<AdminScrapingPage />} />
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
         </Routes>
       </Layout>
       </CartProvider>
