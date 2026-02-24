@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     TRANSBANK_API_KEY: str = ""
     GOOGLE_MAPS_API_KEY: str = ""
 
+    # Backend public URL (for webhook notification URLs — must be reachable by payment providers)
+    BACKEND_PUBLIC_URL: str = "http://localhost:8000"
+
     # Frontend URL (for payment redirect back URLs)
     FRONTEND_URL: str = "http://localhost:3000"
 

@@ -82,6 +82,7 @@ export default function MedicationDetailPage() {
     const params = new URLSearchParams({
       pharmacy_id: priceItem.pharmacy.id,
       medication_id: medId,
+      price_id: priceItem.price_id,
       price: priceItem.price,
       pharmacy_name: priceItem.pharmacy.name,
       medication_name: medication?.name || "",

@@ -151,32 +151,149 @@ async def send_tier_upgrade(phone_number: str, medication_name: str, new_discoun
     return await tsunami_client.send_whatsapp(phone_number, message)
 
 
+async def _handle_medication_search(sender_phone: str, query: str) -> dict | None:
+    """Search medications and send price comparison via WhatsApp. Returns result or None."""
+    from app.core.database import SessionLocal
+    from app.models.medication import Medication
+    from app.models.price import Price
+    from app.models.pharmacy import Pharmacy
+
+    db = SessionLocal()
+    try:
+        # Search by name
+        meds = db.query(Medication).filter(
+            Medication.name.ilike(f"%{query}%")
+        ).limit(5).all()
+
+        if not meds:
+            await tsunami_client.send_whatsapp(
+                sender_phone,
+                f"No encontramos resultados para *{query}*.\n"
+                f"Intenta con otro nombre o principio activo."
+            )
+            return {"action": "search", "results": 0}
+
+        # For each medication, find cheapest price
+        lines = [f"*Resultados para \"{query}\":*\n"]
+        for i, med in enumerate(meds, 1):
+            best = (
+                db.query(Price, Pharmacy)
+                .join(Pharmacy, Price.pharmacy_id == Pharmacy.id)
+                .filter(Price.medication_id == med.id, Price.in_stock == True, Price.price > 0)
+                .order_by(Price.price.asc())
+                .first()
+            )
+            if best:
+                price, pharmacy = best
+                lines.append(
+                    f"{i}. *{med.name}*\n"
+                    f"   ${price.price:,.0f} CLP en {pharmacy.name}"
+                )
+            else:
+                lines.append(f"{i}. *{med.name}* — Sin stock")
+
+        lines.append("\nBusca en pharmapp.cl para ver todas las opciones y comprar.")
+        await tsunami_client.send_whatsapp(sender_phone, "\n".join(lines))
+        return {"action": "search", "results": len(meds)}
+
+    except Exception:
+        logger.exception("WhatsApp medication search failed for %s", query)
+        return None
+    finally:
+        db.close()
+
+
 async def handle_incoming_message(sender_phone: str, message_body: str, message_id: str) -> dict:
     """
     Process an incoming WhatsApp message from a user.
 
-    Routes the message to ServiceTsunami's supervisor agent via
-    chat session for conversational handling (medication search,
-    order status, etc.).
+    Handles direct commands (medication search, order status) locally,
+    falls back to ServiceTsunami for conversational AI handling.
     """
     logger.info("Incoming WhatsApp from %s: %s", sender_phone, message_body[:100])
+    text = message_body.strip().lower()
 
-    session = await tsunami_client.create_chat_session(
-        title=f"PharmApp WhatsApp — {sender_phone}",
-    )
-    session_id = session["id"]
+    # Direct medication search: "buscar paracetamol" or "precio ibuprofeno"
+    for prefix in ("buscar ", "precio ", "comprar "):
+        if text.startswith(prefix):
+            query = message_body.strip()[len(prefix):]
+            result = await _handle_medication_search(sender_phone, query)
+            if result:
+                return result
 
-    context_message = (
-        f"[PharmApp WhatsApp]\n"
-        f"From: {sender_phone}\n"
-        f"Message ID: {message_id}\n\n"
-        f"{message_body}"
-    )
+    # Order status: "orden abc123" — find latest order for this user
+    if text.startswith("orden"):
+        from app.core.database import SessionLocal
+        from app.models.order import Order
+        from app.models.user import User
 
-    response = await tsunami_client.send_chat_message(session_id, context_message)
-    assistant_reply = response.get("assistant_message", {}).get("content", "")
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.phone_number == sender_phone).first()
+            if user:
+                # Get most recent order
+                order = (
+                    db.query(Order)
+                    .filter(Order.user_id == user.id)
+                    .order_by(Order.created_at.desc())
+                    .first()
+                )
+                if order:
+                    status_labels = {
+                        "pending": "Pendiente",
+                        "payment_sent": "Pago enviado",
+                        "confirmed": "Confirmado",
+                        "delivering": "En camino",
+                        "completed": "Entregado",
+                        "cancelled": "Cancelado",
+                    }
+                    status_label = status_labels.get(order.status.value, order.status.value)
+                    await tsunami_client.send_whatsapp(
+                        sender_phone,
+                        f"*Orden #{str(order.id)[:8]}*\n"
+                        f"Estado: *{status_label}*\n"
+                        f"Total: *${order.total:,.0f} CLP*"
+                    )
+                    return {"action": "order_status", "order_id": str(order.id)}
+                else:
+                    await tsunami_client.send_whatsapp(
+                        sender_phone, "No tienes ordenes recientes."
+                    )
+                    return {"action": "order_status", "order_id": None}
+        except Exception:
+            logger.exception("WhatsApp order status lookup failed")
+        finally:
+            db.close()
 
-    if assistant_reply:
-        await tsunami_client.send_whatsapp(sender_phone, assistant_reply)
+    # Fallback: route to ServiceTsunami conversational AI
+    try:
+        session = await tsunami_client.create_chat_session(
+            title=f"PharmApp WhatsApp — {sender_phone}",
+        )
+        session_id = session["id"]
 
-    return {"session_id": session_id, "reply": assistant_reply}
+        context_message = (
+            f"[PharmApp WhatsApp]\n"
+            f"From: {sender_phone}\n"
+            f"Message ID: {message_id}\n\n"
+            f"{message_body}"
+        )
+
+        response = await tsunami_client.send_chat_message(session_id, context_message)
+        assistant_reply = response.get("assistant_message", {}).get("content", "")
+
+        if assistant_reply:
+            await tsunami_client.send_whatsapp(sender_phone, assistant_reply)
+
+        return {"session_id": session_id, "reply": assistant_reply}
+    except Exception:
+        logger.exception("ServiceTsunami fallback failed for %s", sender_phone)
+        # Send a helpful fallback message
+        await tsunami_client.send_whatsapp(
+            sender_phone,
+            "Hola, soy *PharmApp*. Puedo ayudarte a:\n\n"
+            "- *buscar [medicamento]* — buscar precios\n"
+            "- *orden [id]* — ver estado de tu orden\n\n"
+            "O visita pharmapp.cl para comparar precios."
+        )
+        return {"action": "fallback"}

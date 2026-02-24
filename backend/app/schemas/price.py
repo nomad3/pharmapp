@@ -15,6 +15,7 @@ class PriceOut(BaseModel):
         from_attributes = True
 
 class PriceCompareItem(BaseModel):
+    price_id: uuid.UUID
     price: float
     in_stock: bool
     pharmacy: PharmacyOut

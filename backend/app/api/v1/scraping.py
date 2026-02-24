@@ -87,3 +87,27 @@ async def trigger_catalog_scrape(
     from app.tasks.scraping import run_catalog_scrape_with_session
     asyncio.create_task(run_catalog_scrape_with_session(chains))
     return {"status": "started", "type": "catalog", "chains": chains or ["all"]}
+
+
+@router.get("/schedule")
+def get_schedule(db: Session = Depends(get_db)):
+    """Get scheduled scraping info and last run details."""
+    last_run = (
+        db.query(ScrapeRun)
+        .filter(ScrapeRun.status.in_(["completed", "failed"]))
+        .order_by(ScrapeRun.finished_at.desc())
+        .first()
+    )
+    return {
+        "schedule": {
+            "catalog_scrape": "Daily at 3:00 AM UTC",
+            "price_alerts": "Every 6 hours",
+        },
+        "last_run": {
+            "id": str(last_run.id),
+            "chain": last_run.chain,
+            "status": last_run.status,
+            "products_found": last_run.products_found,
+            "finished_at": str(last_run.finished_at) if last_run.finished_at else None,
+        } if last_run else None,
+    }

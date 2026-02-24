@@ -86,6 +86,38 @@ export default function OrderDetailPage() {
         <h1>Orden #{order.id.slice(0, 8)}</h1>
         <OrderStatusBadge status={order.status} />
 
+        {/* Status Timeline */}
+        {order.status !== "cancelled" && (
+          <div className="order-timeline">
+            {["pending", "payment_sent", "confirmed", "delivering", "completed"].map((step, i, arr) => {
+              const currentIdx = arr.indexOf(order.status);
+              const isActive = i <= currentIdx;
+              const stepLabels = {
+                pending: "Pendiente",
+                payment_sent: "Pago enviado",
+                confirmed: "Confirmado",
+                delivering: "En camino",
+                completed: "Entregado",
+              };
+              return (
+                <div key={step} className={`timeline-step ${isActive ? "timeline-step--active" : ""}`}>
+                  <div className="timeline-step__dot" />
+                  {i < arr.length - 1 && <div className="timeline-step__line" />}
+                  <div className="timeline-step__label">{stepLabels[step]}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {order.status === "cancelled" && (
+          <div className="payment-banner payment-banner--failure" style={{ marginTop: 16 }}>
+            <span className="payment-banner__icon">&#10007;</span>
+            <div>
+              <div className="payment-banner__title">Orden cancelada</div>
+            </div>
+          </div>
+        )}
+
         {/* Pharmacy */}
         {order.pharmacy && (
           <div className="order-section">

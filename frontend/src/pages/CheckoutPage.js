@@ -9,6 +9,7 @@ export default function CheckoutPage() {
 
   const pharmacyId = searchParams.get("pharmacy_id");
   const medicationId = searchParams.get("medication_id");
+  const priceId = searchParams.get("price_id");
   const priceAmount = parseFloat(searchParams.get("price") || "0");
   const pharmacyName = searchParams.get("pharmacy_name") || "";
   const medicationName = searchParams.get("medication_name") || "";
@@ -62,7 +63,7 @@ export default function CheckoutPage() {
     try {
       const { data } = await client.post("/orders/", {
         pharmacy_id: pharmacyId,
-        items: [{ medication_id: medicationId, price_id: pharmacyId, quantity }],
+        items: [{ medication_id: medicationId, price_id: priceId, quantity }],
         payment_provider: paymentProvider,
         delivery_address_id: selectedAddress,
       });

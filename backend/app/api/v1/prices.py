@@ -25,6 +25,7 @@ def compare(
         is_online = pharmacy.address == "Venta online"
         pharmacy_out.distance_km = None if is_online else round(distance_m / 1000, 2)
         items.append(PriceCompareItem(
+            price_id=price.id,
             price=price.price,
             in_stock=price.in_stock,
             pharmacy=pharmacy_out,
@@ -61,6 +62,7 @@ def compare_transparent(
             is_precio_justo = markup_pct <= 100
 
         items.append({
+            "price_id": str(price.id),
             "price": price.price,
             "in_stock": price.in_stock,
             "pharmacy": pharmacy_out.model_dump(),
