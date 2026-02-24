@@ -58,16 +58,23 @@ async def create_order(db: Session, user_id: str, phone_number: str, data: Order
         db.add(item)
 
     order_id_str = str(order.id)
-    try:
-        if data.payment_provider == "mercadopago":
-            order.payment_url = create_mercadopago_preference(order_id_str, items, total)
-        elif data.payment_provider == "transbank":
-            order.payment_url = create_transbank_transaction(order_id_str, total)
-    except Exception as e:
-        logger.warning("Payment provider error (order still created): %s", e)
 
-    order.status = OrderStatus.payment_sent
+    if data.payment_provider in ("mercadopago", "transbank"):
+        try:
+            if data.payment_provider == "mercadopago":
+                order.payment_url = create_mercadopago_preference(order_id_str, items, total)
+            elif data.payment_provider == "transbank":
+                order.payment_url = create_transbank_transaction(order_id_str, total)
+        except Exception as e:
+            logger.warning("Payment provider error (order still created): %s", e)
+        order.status = OrderStatus.payment_sent
+    elif data.payment_provider == "cash_on_delivery":
+        order.status = OrderStatus.confirmed
+    elif data.payment_provider == "bank_transfer":
+        order.status = OrderStatus.pending_transfer
+    else:
+        order.status = OrderStatus.payment_sent
+
     db.commit()
     db.refresh(order)
-
     return order
