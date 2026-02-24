@@ -4,6 +4,13 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import client from "../api/client";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 
+const PROVIDER_LABELS = {
+  mercadopago: "Mercado Pago",
+  transbank: "Transbank Webpay",
+  cash_on_delivery: "Pago en Efectivo",
+  bank_transfer: "Transferencia Bancaria",
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -82,33 +89,64 @@ export default function OrderDetailPage() {
             </div>
           </div>
         )}
+        {paymentStatus === "transfer" && (
+          <div className="payment-banner payment-banner--pending">
+            <span className="payment-banner__icon">&#127974;</span>
+            <div>
+              <div className="payment-banner__title">Transferencia pendiente</div>
+              <div className="payment-banner__desc">
+                Realiza la transferencia y tu pedido sera confirmado al verificar el pago.
+              </div>
+            </div>
+          </div>
+        )}
+        {paymentStatus === "cash" && (
+          <div className="payment-banner payment-banner--success">
+            <span className="payment-banner__icon">&#128176;</span>
+            <div>
+              <div className="payment-banner__title">Pedido confirmado</div>
+              <div className="payment-banner__desc">
+                Paga ${`$`}{order.total?.toLocaleString("es-CL")} CLP en efectivo al momento de la entrega.
+              </div>
+            </div>
+          </div>
+        )}
 
         <h1>Orden #{order.id.slice(0, 8)}</h1>
         <OrderStatusBadge status={order.status} />
 
         {/* Status Timeline */}
-        {order.status !== "cancelled" && (
-          <div className="order-timeline">
-            {["pending", "payment_sent", "confirmed", "delivering", "completed"].map((step, i, arr) => {
-              const currentIdx = arr.indexOf(order.status);
-              const isActive = i <= currentIdx;
-              const stepLabels = {
-                pending: "Pendiente",
-                payment_sent: "Pago enviado",
-                confirmed: "Confirmado",
-                delivering: "En camino",
-                completed: "Entregado",
-              };
-              return (
-                <div key={step} className={`timeline-step ${isActive ? "timeline-step--active" : ""}`}>
+        {order.status !== "cancelled" && (() => {
+          let steps;
+          if (order.payment_provider === "cash_on_delivery") {
+            steps = ["confirmed", "delivering", "awaiting_delivery_payment", "completed"];
+          } else if (order.payment_provider === "bank_transfer") {
+            steps = ["pending_transfer", "confirmed", "delivering", "completed"];
+          } else {
+            steps = ["pending", "payment_sent", "confirmed", "delivering", "completed"];
+          }
+          const stepLabels = {
+            pending: "Pendiente",
+            payment_sent: "Pago enviado",
+            pending_transfer: "Esperando transferencia",
+            confirmed: "Confirmado",
+            delivering: "En camino",
+            awaiting_delivery_payment: "Pago pendiente",
+            completed: "Entregado",
+          };
+          const currentIdx = steps.indexOf(order.status);
+          return (
+            <div className="order-timeline">
+              {steps.map((step, i) => (
+                <div key={step} className={`timeline-step ${i <= currentIdx ? "timeline-step--active" : ""}`}>
                   <div className="timeline-step__dot" />
-                  {i < arr.length - 1 && <div className="timeline-step__line" />}
+                  {i < steps.length - 1 && <div className="timeline-step__line" />}
                   <div className="timeline-step__label">{stepLabels[step]}</div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
         {order.status === "cancelled" && (
           <div className="payment-banner payment-banner--failure" style={{ marginTop: 16 }}>
             <span className="payment-banner__icon">&#10007;</span>
@@ -155,7 +193,7 @@ export default function OrderDetailPage() {
         <div className="order-section">
           <h2>Pago</h2>
           <div className="order-card">
-            <div>Medio: {order.payment_provider === "mercadopago" ? "Mercado Pago" : "Transbank Webpay"}</div>
+            <div>Medio: {PROVIDER_LABELS[order.payment_provider] || order.payment_provider}</div>
             {order.payment_status && <div>Estado: {order.payment_status}</div>}
             {order.payment_url && order.status === "payment_sent" && (
               <a href={order.payment_url} className="btn btn--primary btn--sm" style={{ marginTop: 8 }}>
@@ -164,6 +202,11 @@ export default function OrderDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Bank details for transfer payments */}
+        {order.payment_provider === "bank_transfer" && order.status === "pending_transfer" && (
+          <BankDetailsCard />
+        )}
 
         <div className="order-actions">
           <button onClick={() => navigate("/orders")} className="btn btn--outline">
@@ -174,6 +217,40 @@ export default function OrderDetailPage() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function BankDetailsCard() {
+  const [details, setDetails] = useState(null);
+  useEffect(() => {
+    client.get("/settings/bank-details")
+      .then(({ data }) => setDetails(data))
+      .catch(() => {});
+  }, []);
+  if (!details || Object.keys(details).length === 0) return null;
+
+  const copy = (text) => { navigator.clipboard.writeText(text); };
+  const fields = [
+    { label: "Banco", key: "bank_name" },
+    { label: "Tipo de cuenta", key: "bank_account_type" },
+    { label: "N\u00b0 de cuenta", key: "bank_account_number" },
+    { label: "RUT", key: "bank_rut" },
+    { label: "Titular", key: "bank_holder_name" },
+    { label: "Email", key: "bank_email" },
+  ];
+  return (
+    <div className="bank-details-card">
+      <h3>Datos para transferencia</h3>
+      {fields.map(f => details[f.key] ? (
+        <div key={f.key} className="bank-detail-row">
+          <span className="bank-detail-label">{f.label}</span>
+          <span className="bank-detail-value">{details[f.key]}</span>
+          <button className="bank-detail-copy" onClick={() => copy(details[f.key])} title="Copiar">
+            &#128203;
+          </button>
+        </div>
+      ) : null)}
     </div>
   );
 }
