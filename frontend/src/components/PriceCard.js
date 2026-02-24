@@ -8,7 +8,7 @@ const CHAIN_NAMES = {
   dr_simi: "Dr. Simi",
 };
 
-export default function PriceCard({ price, pharmacy, distanceKm, isBest, onBuy, markupPct, isPrecioJusto, isOnline }) {
+export default function PriceCard({ price, pharmacy, distanceKm, isBest, onBuy, onAddToCart, cartAdded, markupPct, isPrecioJusto, isOnline }) {
   const markupColor = markupPct != null
     ? markupPct <= 100 ? "markup-low" : markupPct <= 300 ? "markup-medium" : "markup-high"
     : "";
@@ -48,6 +48,14 @@ export default function PriceCard({ price, pharmacy, distanceKm, isBest, onBuy, 
         <button className="btn btn--primary btn--sm buy-button" onClick={onBuy}>
           Comprar
         </button>
+        {onAddToCart && (
+          <div>
+            <button className="btn-add-cart" onClick={onAddToCart}>
+              + Carrito
+            </button>
+            {cartAdded && <div className="cart-added-msg">Agregado al carrito</div>}
+          </div>
+        )}
       </div>
     </div>
   );

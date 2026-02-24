@@ -2,18 +2,25 @@ import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import client from "../api/client";
+import { useCart } from "../context/CartContext";
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { items: cartItems, total: cartTotal, clearCart } = useCart();
 
-  const pharmacyId = searchParams.get("pharmacy_id");
-  const medicationId = searchParams.get("medication_id");
-  const priceId = searchParams.get("price_id");
-  const priceAmount = parseFloat(searchParams.get("price") || "0");
-  const pharmacyName = searchParams.get("pharmacy_name") || "";
-  const medicationName = searchParams.get("medication_name") || "";
-  const isOnline = searchParams.get("is_online") === "true";
+  const fromCart = searchParams.get("from") === "cart";
+
+  // Single-item params (legacy flow)
+  const pharmacyId = fromCart ? (cartItems[0]?.pharmacy_id || null) : searchParams.get("pharmacy_id");
+  const medicationId = fromCart ? (cartItems[0]?.medication_id || null) : searchParams.get("medication_id");
+  const priceId = fromCart ? null : searchParams.get("price_id");
+  const priceAmount = fromCart ? 0 : parseFloat(searchParams.get("price") || "0");
+  const pharmacyName = fromCart ? "" : (searchParams.get("pharmacy_name") || "");
+  const medicationName = fromCart ? "" : (searchParams.get("medication_name") || "");
+  const isOnline = fromCart
+    ? cartItems.some(i => i.is_online)
+    : searchParams.get("is_online") === "true";
 
   const [quantity, setQuantity] = useState(1);
   const [paymentProvider, setPaymentProvider] = useState("mercadopago");
@@ -24,10 +31,14 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const total = priceAmount * quantity;
+  const total = fromCart ? cartTotal : priceAmount * quantity;
 
   useEffect(() => {
-    if (!pharmacyId || !medicationId) {
+    if (fromCart && cartItems.length === 0) {
+      navigate("/cart");
+      return;
+    }
+    if (!fromCart && (!pharmacyId || !medicationId)) {
       navigate("/");
       return;
     }
@@ -42,7 +53,7 @@ export default function CheckoutPage() {
         if (data.length > 0) setSelectedAddress(data[0].id);
       })
       .catch(() => {});
-  }, [pharmacyId, medicationId, navigate]);
+  }, [fromCart, pharmacyId, medicationId, cartItems.length, navigate]);
 
   const handleAddAddress = async () => {
     if (!newAddress.address || !newAddress.comuna) return;
@@ -61,12 +72,18 @@ export default function CheckoutPage() {
     setLoading(true);
     setError("");
     try {
+      const orderItems = fromCart
+        ? cartItems.map(i => ({ medication_id: i.medication_id, price_id: i.price_id, quantity: i.quantity }))
+        : [{ medication_id: medicationId, price_id: priceId, quantity }];
+      const orderPharmacyId = fromCart ? cartItems[0]?.pharmacy_id : pharmacyId;
+
       const { data } = await client.post("/orders/", {
-        pharmacy_id: pharmacyId,
-        items: [{ medication_id: medicationId, price_id: priceId, quantity }],
+        pharmacy_id: orderPharmacyId,
+        items: orderItems,
         payment_provider: paymentProvider,
         delivery_address_id: selectedAddress,
       });
+      if (fromCart) clearCart();
       if (data.payment_url) {
         window.location.href = data.payment_url;
       } else {
@@ -91,27 +108,46 @@ export default function CheckoutPage() {
         <div className="checkout-section">
           <h2>Resumen del pedido</h2>
           <div className="checkout-card">
-            <div className="checkout-item">
-              <div className="checkout-item__name">{medicationName}</div>
-              <div className="checkout-item__pharmacy">
-                {pharmacyName}
-                {isOnline && <span className="online-tag">Online</span>}
-              </div>
-              <div className="checkout-item__price">
-                ${priceAmount.toLocaleString("es-CL")} CLP c/u
-              </div>
-            </div>
-            <div className="checkout-quantity">
-              <label>Cantidad:</label>
-              <div className="quantity-controls">
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="btn btn--sm">-</button>
-                <span className="quantity-value">{quantity}</span>
-                <button onClick={() => setQuantity(q => Math.min(10, q + 1))} className="btn btn--sm">+</button>
-              </div>
-            </div>
+            {fromCart ? (
+              <>
+                {cartItems.map(item => (
+                  <div key={item.price_id} className="checkout-item" style={{ marginBottom: 12 }}>
+                    <div className="checkout-item__name">{item.medication_name}</div>
+                    <div className="checkout-item__pharmacy">
+                      {item.pharmacy_name}
+                      {item.is_online && <span className="online-tag">Online</span>}
+                    </div>
+                    <div className="checkout-item__price">
+                      ${Math.round(item.price).toLocaleString("es-CL")} CLP x {item.quantity} = ${Math.round(item.price * item.quantity).toLocaleString("es-CL")} CLP
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <div className="checkout-item">
+                  <div className="checkout-item__name">{medicationName}</div>
+                  <div className="checkout-item__pharmacy">
+                    {pharmacyName}
+                    {isOnline && <span className="online-tag">Online</span>}
+                  </div>
+                  <div className="checkout-item__price">
+                    ${priceAmount.toLocaleString("es-CL")} CLP c/u
+                  </div>
+                </div>
+                <div className="checkout-quantity">
+                  <label>Cantidad:</label>
+                  <div className="quantity-controls">
+                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="btn btn--sm">-</button>
+                    <span className="quantity-value">{quantity}</span>
+                    <button onClick={() => setQuantity(q => Math.min(10, q + 1))} className="btn btn--sm">+</button>
+                  </div>
+                </div>
+              </>
+            )}
             <div className="checkout-total">
               <span>Total:</span>
-              <span className="checkout-total__amount">${total.toLocaleString("es-CL")} CLP</span>
+              <span className="checkout-total__amount">${Math.round(total).toLocaleString("es-CL")} CLP</span>
             </div>
           </div>
         </div>

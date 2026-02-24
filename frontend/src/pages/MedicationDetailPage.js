@@ -6,11 +6,13 @@ import useGeolocation from "../hooks/useGeolocation";
 import PriceCard from "../components/PriceCard";
 import PremiumGate from "../components/PremiumGate";
 import PriceHistoryChart from "../components/charts/PriceHistoryChart";
+import { useCart } from "../context/CartContext";
 
 export default function MedicationDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { location } = useGeolocation();
+  const { addItem } = useCart();
   const [prices, setPrices] = useState([]);
   const [medication, setMedication] = useState(null);
   const [medId, setMedId] = useState(null);
@@ -21,6 +23,7 @@ export default function MedicationDetailPage() {
   const [alertPrice, setAlertPrice] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
   const [cenabastCost, setCenabastCost] = useState(null);
+  const [cartMessage, setCartMessage] = useState("");
 
   useEffect(() => {
     if (!slug) return;
@@ -89,6 +92,20 @@ export default function MedicationDetailPage() {
       is_online: priceItem.is_online ? "true" : "false",
     });
     navigate(`/checkout?${params.toString()}`);
+  };
+
+  const handleAddToCart = (priceItem) => {
+    addItem({
+      medication_id: medId,
+      pharmacy_id: priceItem.pharmacy.id,
+      price_id: priceItem.price_id,
+      price: priceItem.price,
+      medication_name: medication?.name || "",
+      pharmacy_name: priceItem.pharmacy.name,
+      is_online: priceItem.is_online || false,
+    });
+    setCartMessage(priceItem.price_id);
+    setTimeout(() => setCartMessage(""), 2000);
   };
 
   const handleSetAlert = async () => {
@@ -188,6 +205,8 @@ export default function MedicationDetailPage() {
                 distanceKm={item.distance_km}
                 isBest={i === 0}
                 onBuy={() => handleBuy(item)}
+                onAddToCart={() => handleAddToCart(item)}
+                cartAdded={cartMessage === item.price_id}
                 markupPct={item.markup_pct}
                 isPrecioJusto={item.is_precio_justo}
                 isOnline={item.is_online}

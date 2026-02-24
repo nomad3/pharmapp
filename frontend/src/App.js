@@ -30,7 +30,9 @@ import AdherenceProgramsPage from "./pages/AdherenceProgramsPage";
 import AdherenceDashboardPage from "./pages/AdherenceDashboardPage";
 import AdherenceEnrollmentDetailPage from "./pages/AdherenceEnrollmentDetailPage";
 import AdherenceSponsorPage from "./pages/AdherenceSponsorPage";
-// Checkout flow
+// Cart & Checkout flow
+import { CartProvider } from "./context/CartContext";
+import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 // Admin
@@ -48,6 +50,7 @@ function MedicationRedirect() {
 function App() {
   return (
     <BrowserRouter>
+      <CartProvider>
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -55,6 +58,7 @@ function App() {
           <Route path="/medicamento/:slug" element={<MedicationDetailPage />} />
           <Route path="/medication/:id" element={<MedicationRedirect />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
@@ -90,6 +94,7 @@ function App() {
           <Route path="/admin/scraping" element={<AdminScrapingPage />} />
         </Routes>
       </Layout>
+      </CartProvider>
     </BrowserRouter>
   );
 }
