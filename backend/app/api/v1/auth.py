@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.core.security import generate_otp, create_access_token
 from app.models.user import User
 from app.models.otp import OtpCode
@@ -60,3 +61,36 @@ def verify_otp(body: OtpVerify, db: Session = Depends(get_db)):
 
     token = create_access_token(str(user.id))
     return Token(access_token=token)
+
+
+@router.get("/profile")
+def get_profile(user: User = Depends(get_current_user)):
+    return {
+        "id": str(user.id),
+        "phone_number": user.phone_number,
+        "name": user.name,
+        "comuna": user.comuna,
+        "notification_prefs": user.notification_prefs or {
+            "order_updates": True,
+            "price_alerts": True,
+            "refill_reminders": True,
+            "promotions": False,
+        },
+        "created_at": str(user.created_at),
+    }
+
+
+@router.put("/profile")
+def update_profile(
+    body: dict,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    if "name" in body:
+        user.name = body["name"]
+    if "comuna" in body:
+        user.comuna = body["comuna"]
+    if "notification_prefs" in body:
+        user.notification_prefs = body["notification_prefs"]
+    db.commit()
+    return {"status": "updated"}
