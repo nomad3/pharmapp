@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import SearchBar from "./SearchBar";
+import Autocomplete from "./Autocomplete";
 
 export default function Layout({ children }) {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function Layout({ children }) {
 
           {!isHome && (
             <div className="header-search">
-              <SearchBar compact />
+              <Autocomplete />
             </div>
           )}
 
