@@ -8,10 +8,19 @@ const formatCLP = (n) => `$${Number(n).toLocaleString("es-CL")} CLP`;
 const STATUS_LABELS = {
   pending: "Pendiente",
   payment_sent: "Pago Enviado",
+  pending_transfer: "Transferencia Pendiente",
   confirmed: "Confirmado",
   delivering: "En Camino",
+  awaiting_delivery_payment: "Pago en Entrega",
   completed: "Entregado",
   cancelled: "Cancelado",
+};
+
+const PROVIDER_LABELS = {
+  mercadopago: "Mercado Pago",
+  transbank: "Transbank",
+  cash_on_delivery: "Efectivo",
+  bank_transfer: "Transferencia",
 };
 
 export default function AdminOrdersPage() {
@@ -44,6 +53,24 @@ export default function AdminOrdersPage() {
       .finally(() => setUpdating(null));
   };
 
+  const confirmPayment = (orderId) => {
+    setUpdating(orderId);
+    client
+      .patch(`/orders/${orderId}/confirm-payment`)
+      .then(() => fetchOrders())
+      .catch(console.error)
+      .finally(() => setUpdating(null));
+  };
+
+  const rejectPayment = (orderId) => {
+    setUpdating(orderId);
+    client
+      .patch(`/orders/${orderId}/reject-payment`)
+      .then(() => fetchOrders())
+      .catch(console.error)
+      .finally(() => setUpdating(null));
+  };
+
   return (
     <div className="admin-page">
       <Helmet>
@@ -64,8 +91,10 @@ export default function AdminOrdersPage() {
             <option value="">Todos los estados</option>
             <option value="pending">Pendiente</option>
             <option value="payment_sent">Pago Enviado</option>
+            <option value="pending_transfer">Transferencia Pendiente</option>
             <option value="confirmed">Confirmado</option>
             <option value="delivering">En Camino</option>
+            <option value="awaiting_delivery_payment">Pago en Entrega</option>
             <option value="completed">Entregado</option>
             <option value="cancelled">Cancelado</option>
           </select>
@@ -107,7 +136,7 @@ export default function AdminOrdersPage() {
                         </span>
                       </td>
                       <td>{formatCLP(o.total)}</td>
-                      <td>{o.payment_provider || "-"}</td>
+                      <td>{PROVIDER_LABELS[o.payment_provider] || o.payment_provider || "-"}</td>
                       <td>
                         {new Date(o.created_at).toLocaleDateString("es-CL", {
                           day: "numeric",
@@ -120,6 +149,33 @@ export default function AdminOrdersPage() {
                           className="admin-actions"
                           onClick={(e) => e.stopPropagation()}
                         >
+                          {o.status === "pending_transfer" && (
+                            <>
+                              <button
+                                className="btn btn--primary btn--sm"
+                                disabled={updating === o.id}
+                                onClick={() => confirmPayment(o.id)}
+                              >
+                                Confirmar Pago
+                              </button>
+                              <button
+                                className="btn btn--danger btn--sm"
+                                disabled={updating === o.id}
+                                onClick={() => rejectPayment(o.id)}
+                              >
+                                Rechazar
+                              </button>
+                            </>
+                          )}
+                          {o.status === "awaiting_delivery_payment" && (
+                            <button
+                              className="btn btn--primary btn--sm"
+                              disabled={updating === o.id}
+                              onClick={() => updateStatus(o.id, "completed")}
+                            >
+                              Pago Recibido
+                            </button>
+                          )}
                           {o.status === "confirmed" && (
                             <button
                               className="btn btn--primary btn--sm"
