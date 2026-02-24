@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 import httpx
@@ -10,6 +11,7 @@ class AhumadaScraper(BaseScraper):
     CHAIN = "ahumada"
     BASE_URL = "https://www.farmaciasahumada.cl"
     RATE_LIMIT_DELAY = 3.0
+    CATALOG_PAGE_SIZE = 24
 
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
@@ -53,6 +55,84 @@ class AhumadaScraper(BaseScraper):
                     self.logger.warning("Ahumada blocked by Cloudflare for query '%s' — skipping", query)
                 else:
                     raise
+        return results
+
+    async def browse_catalog(self) -> list[ScrapedProduct]:
+        """Browse the entire Medicamentos category via SFCC Search-UpdateGrid pagination."""
+        results = []
+        seen_pids: set[str] = set()
+
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+            start = 0
+            consecutive_empty = 0
+
+            while consecutive_empty < 2:
+                try:
+                    url = (
+                        f"{self.BASE_URL}/on/demandware.store/"
+                        f"Sites-ahumada-cl-Site/default/Search-UpdateGrid"
+                    )
+                    resp = await self._get_with_retry(
+                        client,
+                        url,
+                        params={
+                            "cgid": "medicamentos",
+                            "start": start,
+                            "sz": self.CATALOG_PAGE_SIZE,
+                        },
+                        headers=self.HEADERS,
+                    )
+                    html = resp.text
+                    source_url = f"{self.BASE_URL}/medicamentos?start={start}"
+
+                    page_products = self._parse_with_bs4(html, source_url)
+
+                    if not page_products:
+                        consecutive_empty += 1
+                        self.logger.info(
+                            "Ahumada catalog offset %d: 0 products (empty: %d/2)",
+                            start, consecutive_empty,
+                        )
+                        start += self.CATALOG_PAGE_SIZE
+                        await asyncio.sleep(self.RATE_LIMIT_DELAY)
+                        continue
+
+                    consecutive_empty = 0
+                    page_count = 0
+                    for p in page_products:
+                        if p.sku and p.sku not in seen_pids:
+                            seen_pids.add(p.sku)
+                            results.append(p)
+                            page_count += 1
+
+                    self.logger.info(
+                        "Ahumada catalog offset %d: %d new products (total: %d)",
+                        start, page_count, len(results),
+                    )
+
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 403:
+                        self.logger.warning(
+                            "Ahumada Cloudflare block at offset %d — stopping", start
+                        )
+                        self.errors.append(f"Ahumada catalog offset {start}: Cloudflare 403")
+                        break
+                    self.errors.append(f"Ahumada catalog offset {start}: HTTP {e.response.status_code}")
+                    self.logger.error("HTTP error at offset %d: %s", start, e)
+                    break
+                except Exception as e:
+                    self.errors.append(f"Ahumada catalog offset {start}: {e}")
+                    self.logger.error("Error at offset %d: %s", start, e)
+                    break
+
+                start += self.CATALOG_PAGE_SIZE
+                await asyncio.sleep(self.RATE_LIMIT_DELAY)
+
+        self.logger.info(
+            "Ahumada catalog complete: %d products, %d errors",
+            len(results), len(self.errors),
+        )
+        self.results = results
         return results
 
     def _parse_with_bs4(self, html: str, source_url: str) -> list[ScrapedProduct]:

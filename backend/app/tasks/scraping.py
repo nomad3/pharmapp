@@ -192,3 +192,86 @@ async def run_location_scrape(db: Session, chains: list[str] | None = None):
         db.commit()
         logger.exception("Location scrape failed")
         raise
+
+
+# --- Catalog scraping ---
+
+
+async def run_catalog_scrape_with_session(chains: list[str] | None = None):
+    """Entry point for background tasks — creates its own DB session."""
+    from app.core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        return await run_catalog_scrape(db, chains)
+    finally:
+        db.close()
+
+
+async def run_catalog_scrape(db: Session, chains: list[str] | None = None):
+    """Browse the full medications catalog for specified chains (or all).
+
+    1. For each chain, browse the entire Medicamentos category
+    2. Normalize and upsert into marketplace tables
+    3. Record ScrapeRun for monitoring
+    """
+    chains = chains or list(SCRAPERS.keys())
+
+    run = ScrapeRun(
+        chain=",".join(chains),
+        status="running",
+        run_type="catalog",
+    )
+    db.add(run)
+    db.commit()
+
+    total_products = []
+    total_errors = []
+
+    try:
+        for chain in chains:
+            if chain not in SCRAPERS:
+                logger.warning("Unknown chain: %s", chain)
+                continue
+
+            scraper = SCRAPERS[chain]()
+            logger.info("Browsing %s catalog...", chain)
+
+            try:
+                products = await scraper.browse_catalog()
+            except NotImplementedError:
+                logger.warning("%s does not support catalog browsing, skipping", chain)
+                continue
+
+            total_products.extend(products)
+            total_errors.extend(scraper.errors)
+
+            run.products_found += len(products)
+            db.commit()
+
+        # ETL: normalize into marketplace
+        logger.info("Upserting %d catalog products into marketplace...", len(total_products))
+        stats = upsert_scraped_products(db, total_products)
+
+        run.status = "completed"
+        run.prices_upserted = stats["prices_upserted"]
+        run.medications_created = stats["medications_created"]
+        run.pharmacies_created = stats["pharmacies_created"]
+        run.errors = total_errors[:100]
+        run.finished_at = datetime.now(timezone.utc)
+        db.commit()
+
+        logger.info("Catalog scrape completed: %s", stats)
+        return {
+            "run_id": str(run.id),
+            "products_found": len(total_products),
+            **stats,
+            "errors": len(total_errors),
+        }
+
+    except Exception as e:
+        run.status = "failed"
+        run.errors = total_errors[:99] + [str(e)]
+        run.finished_at = datetime.now(timezone.utc)
+        db.commit()
+        logger.exception("Catalog scrape failed")
+        raise

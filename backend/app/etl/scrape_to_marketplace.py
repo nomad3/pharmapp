@@ -1,13 +1,17 @@
 """Normalize scraped pharmacy products into the marketplace tables."""
+import logging
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from geoalchemy2.elements import WKTElement
 
 from app.models.medication import Medication
 from app.models.pharmacy import Pharmacy
 from app.models.price import Price
 from app.scrapers.base import ScrapedProduct
+
+logger = logging.getLogger(__name__)
 
 CHAIN_COORDS = {
     "cruz_verde": (-70.6506, -33.4378),
@@ -22,6 +26,39 @@ CHAIN_DISPLAY = {
     "ahumada": "Farmacias Ahumada",
     "dr_simi": "Dr. Simi",
 }
+
+
+def _get_or_create_medication(
+    db: Session, p: ScrapedProduct, med_cache: dict, stats: dict
+) -> Medication | None:
+    """Find existing or create new Medication, handling slug collisions."""
+    name_lower = p.name.strip().lower()
+    med = Medication(
+        name=p.name.strip(),
+        active_ingredient=p.active_ingredient,
+        dosage=p.dosage,
+        form=p.form,
+        lab=p.lab,
+        requires_prescription=p.requires_prescription,
+    )
+    try:
+        with db.begin_nested():
+            db.add(med)
+            db.flush()
+        med_cache[name_lower] = med
+        stats["medications_created"] += 1
+        return med
+    except IntegrityError:
+        # Slug or unique constraint collision — find existing
+        existing = db.query(Medication).filter(
+            Medication.name == p.name.strip(),
+        ).first()
+        if existing:
+            med_cache[name_lower] = existing
+            return existing
+        logger.warning("Skipping product with slug collision: %s", p.name)
+        stats["skipped"] += 1
+        return None
 
 
 def upsert_scraped_products(db: Session, products: list[ScrapedProduct]) -> dict:
@@ -84,18 +121,9 @@ def upsert_scraped_products(db: Session, products: list[ScrapedProduct]) -> dict
         name_lower = p.name.strip().lower()
         med = med_cache.get(name_lower)
         if not med:
-            med = Medication(
-                name=p.name.strip(),
-                active_ingredient=p.active_ingredient,
-                dosage=p.dosage,
-                form=p.form,
-                lab=p.lab,
-                requires_prescription=p.requires_prescription,
-            )
-            db.add(med)
-            db.flush()
-            med_cache[name_lower] = med
-            stats["medications_created"] += 1
+            med = _get_or_create_medication(db, p, med_cache, stats)
+            if not med:
+                continue
 
         pharmacy_id = chain_pharmacy_ids[p.chain]
 

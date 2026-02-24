@@ -37,6 +37,10 @@ class BaseScraper(ABC):
     async def search(self, query: str) -> list[ScrapedProduct]:
         ...
 
+    async def browse_catalog(self) -> list[ScrapedProduct]:
+        """Browse the full medications catalog. Override in subclasses."""
+        raise NotImplementedError(f"{self.CHAIN} does not support catalog browsing")
+
     async def search_batch(self, queries: list[str]) -> list[ScrapedProduct]:
         all_results = []
         for i, query in enumerate(queries):

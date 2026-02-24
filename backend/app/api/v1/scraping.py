@@ -74,3 +74,16 @@ async def trigger_location_scrape(
     from app.tasks.scraping import run_location_scrape_with_session
     asyncio.create_task(run_location_scrape_with_session(chains))
     return {"status": "started", "type": "locations", "chains": chains or ["all"]}
+
+
+@router.post("/catalog")
+async def trigger_catalog_scrape(
+    chains: list[str] | None = Query(None),
+):
+    """Trigger a full catalog scraping run in background.
+
+    Browses the entire Medicamentos category for each chain.
+    """
+    from app.tasks.scraping import run_catalog_scrape_with_session
+    asyncio.create_task(run_catalog_scrape_with_session(chains))
+    return {"status": "started", "type": "catalog", "chains": chains or ["all"]}
