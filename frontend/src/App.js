@@ -30,6 +30,8 @@ import AdherenceProgramsPage from "./pages/AdherenceProgramsPage";
 import AdherenceDashboardPage from "./pages/AdherenceDashboardPage";
 import AdherenceEnrollmentDetailPage from "./pages/AdherenceEnrollmentDetailPage";
 import AdherenceSponsorPage from "./pages/AdherenceSponsorPage";
+// Profile
+import ProfilePage from "./pages/ProfilePage";
 // Cart & Checkout flow
 import { CartProvider } from "./context/CartContext";
 import CartPage from "./pages/CartPage";
@@ -62,6 +64,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/map" element={<PharmacyMapPage />} />
           <Route path="/analytics" element={<AnalyticsDashboardPage />} />
