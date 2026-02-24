@@ -64,9 +64,9 @@ export default function PremiumPage() {
     <div className="premium-page">
       <div className="container">
         <div className="premium-hero">
-          <h1>PharmApp Premium</h1>
+          <h1>Remedia Premium</h1>
           <p className="premium-subtitle">
-            Aprovecha al máximo PharmApp con funciones exclusivas para ahorrar más en tus medicamentos.
+            Aprovecha al máximo Remedia con funciones exclusivas para ahorrar más en tus medicamentos.
           </p>
           <div className="premium-price">
             <span className="price-amount">$2.990</span>

@@ -1,5 +1,5 @@
 """
-Sync Cenabast data into the PharmApp marketplace tables.
+Sync Cenabast data into the Remedia marketplace tables.
 
 Creates Medication, Pharmacy, and Price records from the already-imported
 cenabast_products and cenabast_invoices tables.

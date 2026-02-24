@@ -9,7 +9,7 @@ from app.middleware.rate_limit import RateLimitMiddleware
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="PharmApp API")
+app = FastAPI(title="Remedia API")
 
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(

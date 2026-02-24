@@ -8,7 +8,7 @@ def create_mercadopago_preference(order_id: str, items: list, total: float) -> s
     backend_url = settings.BACKEND_PUBLIC_URL
     sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
     preference_data = {
-        "items": [{"title": "Medicamentos PharmApp", "quantity": 1, "unit_price": total}],
+        "items": [{"title": "Medicamentos Remedia", "quantity": 1, "unit_price": total}],
         "external_reference": order_id,
         "back_urls": {
             "success": f"{frontend_url}/orders/{order_id}?status=success",

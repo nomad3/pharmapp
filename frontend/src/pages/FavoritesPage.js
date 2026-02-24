@@ -54,7 +54,7 @@ export default function FavoritesPage() {
   return (
     <div className="favorites-page">
       <Helmet>
-        <title>Mis favoritos | PharmApp</title>
+        <title>Mis favoritos | Remedia</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="container">

@@ -27,7 +27,7 @@ async def whatsapp_webhook(request: Request, db: Session = Depends(get_db)):
     Receive incoming WhatsApp messages forwarded by ServiceTsunami.
 
     OpenClaw receives the WhatsApp Cloud API webhook, parses the message,
-    and forwards it here so PharmApp can handle domain-specific logic
+    and forwards it here so Remedia can handle domain-specific logic
     (medication search, order status, etc.).
     """
     body = await request.json()

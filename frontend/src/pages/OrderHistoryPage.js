@@ -27,7 +27,7 @@ export default function OrderHistoryPage() {
   return (
     <div className="order-history">
       <Helmet>
-        <title>Mis pedidos | PharmApp</title>
+        <title>Mis pedidos | Remedia</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="container">

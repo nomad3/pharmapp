@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PharmApp is a medication marketplace for Chile that helps people find the cheapest legal medicines near them. It aggregates pricing from pharmacy chains (Cruz Verde, Salcobrand, Ahumada, Dr. Simi) and government data (ISP, CENABAST), and completes purchases through a WhatsApp agent handling payment, delivery, and coordination.
+Remedia is a medication marketplace for Chile that helps people find the cheapest legal medicines near them. It aggregates pricing from pharmacy chains (Cruz Verde, Salcobrand, Ahumada, Dr. Simi) and government data (ISP, CENABAST), and completes purchases through a WhatsApp agent handling payment, delivery, and coordination.
 
 Uses **ServiceTsunami** (`../servicetsunami-agents`) as the agent orchestration engine for WhatsApp messaging, web scraping pipelines, and AI agent interactions.
 
@@ -70,7 +70,7 @@ cd frontend && npm test
 
 ## ServiceTsunami Integration
 
-PharmApp calls ServiceTsunami (`../servicetsunami-agents`) via `app/services/servicetsunami.py`:
+Remedia calls ServiceTsunami (`../servicetsunami-agents`) via `app/services/servicetsunami.py`:
 - **WhatsApp OTP**: Sends verification codes through ServiceTsunami's SkillRouter
 - **WhatsApp purchase flow**: Order confirmation, payment link delivery, delivery coordination
 - **Scraping pipelines**: Triggers web_researcher agent to scrape pharmacy chain websites

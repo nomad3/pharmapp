@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <Helmet>
-        <title>Iniciar sesion | PharmApp</title>
+        <title>Iniciar sesion | Remedia</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="login-card">

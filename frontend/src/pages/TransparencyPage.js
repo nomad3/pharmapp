@@ -42,7 +42,7 @@ export default function TransparencyPage() {
   return (
     <div className="transparency-page">
       <Helmet>
-        <title>Transparencia de precios | PharmApp</title>
+        <title>Transparencia de precios | Remedia</title>
         <meta name="description" content="Compara precios de Cenabast vs farmacias. Descubre cuánto margen cobran las cadenas sobre el costo del Estado." />
       </Helmet>
       <div className="container">

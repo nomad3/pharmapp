@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     SERVICETSUNAMI_PASSWORD: str = ""
     SERVICETSUNAMI_AGENT_ID: str = ""
 
-    # PharmApp webhook URL (registered with ServiceTsunami for incoming WhatsApp)
+    # Remedia webhook URL (registered with ServiceTsunami for incoming WhatsApp)
     PHARMAPP_WEBHOOK_URL: str = "http://localhost:8000/api/v1/webhooks/whatsapp"
     PHARMAPP_WEBHOOK_SECRET: str = ""
 

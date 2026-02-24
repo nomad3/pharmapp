@@ -119,10 +119,10 @@ export default function MedicationDetailPage() {
   return (
     <div className="medication-detail">
       <Helmet>
-        <title>{`${medication?.name || "Medicamento"} — Precios en farmacias | PharmApp`}</title>
+        <title>{`${medication?.name || "Medicamento"} — Precios en farmacias | Remedia`}</title>
         <meta name="description" content={`Compara precios de ${medication?.name || "medicamento"} en farmacias de Chile. ${prices.length} farmacias con stock.`} />
-        <link rel="canonical" href={`https://pharmapp.cl/medicamento/${slug}`} />
-        <meta property="og:title" content={`${medication?.name || "Medicamento"} — PharmApp`} />
+        <link rel="canonical" href={`https://remedia.cl/medicamento/${slug}`} />
+        <meta property="og:title" content={`${medication?.name || "Medicamento"} — Remedia`} />
         <meta property="og:description" content={`Compara precios de ${medication?.name || "medicamento"} en farmacias de Chile.`} />
         <meta property="og:type" content="product" />
         <meta property="og:locale" content="es_CL" />

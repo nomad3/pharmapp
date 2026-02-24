@@ -17,7 +17,7 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <Helmet>
-        <title>PharmApp — Compara precios de medicamentos en Chile</title>
+        <title>Remedia — Compara precios de medicamentos en Chile</title>
         <meta name="description" content="Compara precios de medicamentos en farmacias de Chile. Encuentra el mejor precio cerca de ti y compra por WhatsApp." />
       </Helmet>
       <section className="home-hero">

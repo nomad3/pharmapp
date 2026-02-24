@@ -30,7 +30,7 @@ export default function SearchResultsPage() {
   return (
     <div className="search-results">
       <Helmet>
-        <title>{`"${q}" — Buscar medicamentos | PharmApp`}</title>
+        <title>{`"${q}" — Buscar medicamentos | Remedia`}</title>
         <meta name="description" content={`${results.length} resultados para "${q}" en farmacias de Chile.`} />
       </Helmet>
       <div className="container">

@@ -81,7 +81,7 @@ async def geocode_all():
 
         async with httpx.AsyncClient(
             timeout=15,
-            headers={"User-Agent": "PharmApp/1.0 (pharmacy geocoding)"},
+            headers={"User-Agent": "Remedia/1.0 (pharmacy geocoding)"},
         ) as client:
             for i, row in enumerate(to_geocode):
                 address_str = clean_address(row.address, row.comuna)

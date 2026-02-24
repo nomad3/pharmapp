@@ -45,7 +45,7 @@ export default function OrderDetailPage() {
   return (
     <div className="order-detail-page">
       <Helmet>
-        <title>{`Orden #${id?.slice(0, 8)} | PharmApp`}</title>
+        <title>{`Orden #${id?.slice(0, 8)} | Remedia`}</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="container">

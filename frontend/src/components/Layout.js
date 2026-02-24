@@ -15,7 +15,7 @@ export default function Layout({ children }) {
         <div className="header-inner container">
           <Link to="/" className="logo">
             <span className="logo-icon">+</span>
-            <span className="logo-text">PharmApp</span>
+            <span className="logo-text">Remedia</span>
           </Link>
 
           {!isHome && (
@@ -82,7 +82,7 @@ export default function Layout({ children }) {
         <div className="footer-inner container">
           <div className="footer-brand">
             <span className="logo-icon">+</span>
-            <span className="logo-text">PharmApp</span>
+            <span className="logo-text">Remedia</span>
             <p>Encuentra los medicamentos más baratos cerca de ti</p>
           </div>
           <div className="footer-links">
@@ -108,7 +108,7 @@ export default function Layout({ children }) {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2026 PharmApp. Todos los derechos reservados.</p>
+            <p>&copy; 2026 Remedia. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>

@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">PharmApp</h1>
+  <h1 align="center">Remedia</h1>
   <p align="center">
     <strong>Chile's Medication Price Comparison Marketplace</strong>
   </p>
@@ -22,7 +22,7 @@
 
 ## Overview
 
-PharmApp aggregates medication pricing from Chile's major pharmacy chains (Cruz Verde, Salcobrand, Ahumada, Dr. Simi) and government data sources (ISP, CENABAST). Users can search for any medication, compare prices across pharmacies ranked by price and distance, and complete purchases through WhatsApp or web checkout with MercadoPago/Transbank.
+Remedia aggregates medication pricing from Chile's major pharmacy chains (Cruz Verde, Salcobrand, Ahumada, Dr. Simi) and government data sources (ISP, CENABAST). Users can search for any medication, compare prices across pharmacies ranked by price and distance, and complete purchases through WhatsApp or web checkout with MercadoPago/Transbank.
 
 ```
 11,626 medications  |  140,249 prices  |  2,706 pharmacies  |  4 chains
@@ -454,7 +454,7 @@ graph TB
 
 ## WhatsApp Commerce
 
-PharmApp supports a conversational commerce flow via WhatsApp through [ServiceTsunami](https://github.com/nomad3/servicetsunami-agents):
+Remedia supports a conversational commerce flow via WhatsApp through [ServiceTsunami](https://github.com/nomad3/servicetsunami-agents):
 
 | Command | Action |
 |---------|--------|

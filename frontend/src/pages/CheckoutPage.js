@@ -81,7 +81,7 @@ export default function CheckoutPage() {
   return (
     <div className="checkout-page">
       <Helmet>
-        <title>Confirmar compra | PharmApp</title>
+        <title>Confirmar compra | Remedia</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="container">
