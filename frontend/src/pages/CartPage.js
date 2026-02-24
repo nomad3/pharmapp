@@ -41,7 +41,7 @@ export default function CartPage() {
   return (
     <div className="cart-page">
       <Helmet>
-        <title>Carrito ({itemCount}) | Remedia</title>
+        <title>{`Carrito (${itemCount}) | Remedia`}</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <h1 className="page-title">Carrito ({itemCount})</h1>
