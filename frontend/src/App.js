@@ -33,6 +33,11 @@ import AdherenceSponsorPage from "./pages/AdherenceSponsorPage";
 // Checkout flow
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
+// Admin
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminScrapingPage from "./pages/admin/AdminScrapingPage";
 import "./App.css";
 
 function MedicationRedirect() {
@@ -78,6 +83,11 @@ function App() {
           <Route path="/adherence/dashboard" element={<AdherenceDashboardPage />} />
           <Route path="/adherence/enrollment/:id" element={<AdherenceEnrollmentDetailPage />} />
           <Route path="/adherence/sponsor/:slug" element={<AdherenceSponsorPage />} />
+          {/* Admin */}
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/scraping" element={<AdminScrapingPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
