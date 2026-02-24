@@ -299,7 +299,7 @@
    ============================================ */
 
 .home-hero {
-  background: linear-gradient(135deg, var(--primary) 0%, #004D40 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   padding: 80px 0 64px;
   text-align: center;
   color: white;
@@ -772,7 +772,7 @@
 }
 
 .price-card.best-price {
-  border-color: var(--primary);
+  border-color: var(--accent);
   border-width: 2px;
   position: relative;
 }
@@ -781,7 +781,7 @@
   position: absolute;
   top: -10px;
   left: 20px;
-  background: var(--primary);
+  background: var(--accent);
   color: white;
   font-size: 11px;
   font-weight: 700;
@@ -2562,7 +2562,7 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-light));
   border: 1px solid #86efac;
   border-radius: var(--radius-lg);
   padding: 1.25rem;
@@ -2604,17 +2604,17 @@
 
 .markup-extreme {
   background: #fef2f2;
-  color: #dc2626;
+  color: var(--error);
 }
 
 .markup-high {
   background: #fffbeb;
-  color: #d97706;
+  color: var(--accent);
 }
 
 .markup-moderate {
-  background: #ecfdf5;
-  color: #059669;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .markup-indicator {
@@ -2624,22 +2624,22 @@
 }
 
 .markup-indicator.markup-low {
-  color: #059669;
+  color: var(--primary);
 }
 
 .markup-indicator.markup-medium {
-  color: #d97706;
+  color: var(--accent);
 }
 
 .markup-indicator.markup-high {
-  color: #dc2626;
+  color: var(--error);
 }
 
 .precio-justo-badge {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #10b981;
+  background: var(--success);
   color: white;
   padding: 2px 8px;
   border-radius: var(--radius-full);
@@ -2774,22 +2774,22 @@
 }
 
 .confidence-high {
-  background: #ecfdf5;
-  color: #059669;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .confidence-medium {
   background: #fffbeb;
-  color: #d97706;
+  color: var(--accent);
 }
 
 .confidence-low {
   background: #fef2f2;
-  color: #dc2626;
+  color: var(--error);
 }
 
 .days-urgent {
-  color: #dc2626;
+  color: var(--error);
   font-weight: 600;
 }
 
@@ -2876,8 +2876,8 @@
 }
 
 .legend-dot--0 { background: var(--primary); }
-.legend-dot--1 { background: #f59e0b; }
-.legend-dot--2 { background: #ef4444; }
+.legend-dot--1 { background: var(--accent); }
+.legend-dot--2 { background: var(--error); }
 .legend-dot--3 { background: #8b5cf6; }
 .legend-dot--4 { background: #06b6d4; }
 
@@ -2912,8 +2912,8 @@
 }
 
 .bar-color--0 { background: var(--primary); }
-.bar-color--1 { background: #f59e0b; }
-.bar-color--2 { background: #ef4444; }
+.bar-color--1 { background: var(--accent); }
+.bar-color--2 { background: var(--error); }
 .bar-color--3 { background: #8b5cf6; }
 .bar-color--4 { background: #06b6d4; }
 
@@ -3019,8 +3019,8 @@
 }
 
 .demand-card--ready {
-  border-color: #10b981;
-  background: linear-gradient(135deg, #ecfdf5, white);
+  border-color: var(--success);
+  background: linear-gradient(135deg, var(--primary-light), white);
 }
 
 .demand-card__header {
@@ -3037,7 +3037,7 @@
 }
 
 .demand-card__badge {
-  background: #10b981;
+  background: var(--success);
   color: white;
   padding: 2px 8px;
   border-radius: var(--radius-full);
@@ -3144,7 +3144,7 @@
 }
 
 .savings-amount {
-  color: #059669;
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -3285,7 +3285,7 @@
 }
 
 .refill-countdown--urgent .refill-countdown__days {
-  color: #dc2626;
+  color: var(--error);
 }
 
 .refill-countdown__label {
@@ -3510,7 +3510,7 @@
 }
 
 .refill-timeline__discount {
-  color: #059669;
+  color: var(--primary);
   font-weight: 500;
 }
 
@@ -3641,7 +3641,7 @@
   border-top: 1px solid #f3f4f6;
   font-weight: 600;
 }
-.checkout-total__amount { font-size: 1.25rem; color: #059669; }
+.checkout-total__amount { font-size: 1.25rem; color: var(--primary); }
 
 /* Address selection */
 .address-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
@@ -3655,7 +3655,7 @@
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.address-option.selected { border-color: #059669; background: #f0fdf4; }
+.address-option.selected { border-color: var(--primary); background: var(--primary-light); }
 .address-option input[type="radio"] { margin-top: 3px; }
 .address-option__label { font-weight: 600; }
 .address-option__detail { color: #666; font-size: 0.9rem; }
@@ -3676,7 +3676,7 @@
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.payment-option.selected { border-color: #059669; background: #f0fdf4; }
+.payment-option.selected { border-color: var(--primary); background: var(--primary-light); }
 .payment-option input[type="radio"] { margin-top: 0; }
 .payment-option__name { font-weight: 600; }
 .payment-option__desc { color: #666; font-size: 0.85rem; }
@@ -3741,7 +3741,7 @@
   font-size: 0.9rem;
   margin-top: 0.25rem;
 }
-.order-item__price { font-weight: 600; color: #059669; }
+.order-item__price { font-weight: 600; color: var(--primary); }
 
 .order-total {
   display: flex;
@@ -3750,7 +3750,7 @@
   font-size: 1.1rem;
   padding: 1rem 0;
 }
-.order-total__amount { color: #059669; font-size: 1.25rem; }
+.order-total__amount { color: var(--primary); font-size: 1.25rem; }
 
 .order-actions {
   display: flex;
@@ -3781,8 +3781,8 @@
   z-index: 1;
 }
 .timeline-step--active .timeline-step__dot {
-  background: #059669;
-  border-color: #059669;
+  background: var(--primary);
+  border-color: var(--primary);
 }
 .timeline-step__line {
   position: absolute;
@@ -3793,7 +3793,7 @@
   background: #d1d5db;
 }
 .timeline-step--active .timeline-step__line {
-  background: #059669;
+  background: var(--primary);
 }
 .timeline-step__label {
   margin-top: 0.5rem;
@@ -3802,7 +3802,7 @@
   text-align: center;
 }
 .timeline-step--active .timeline-step__label {
-  color: #059669;
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -3815,7 +3815,7 @@
   border-radius: 10px;
   margin-bottom: 1.5rem;
 }
-.payment-banner--success { background: #f0fdf4; border: 1px solid #86efac; }
+.payment-banner--success { background: var(--primary-light); border: 1px solid #86efac; }
 .payment-banner--failure { background: #fef2f2; border: 1px solid #fca5a5; }
 .payment-banner--pending { background: #fffbeb; border: 1px solid #fde68a; }
 .payment-banner__icon { font-size: 1.5rem; }
