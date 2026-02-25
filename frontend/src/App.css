@@ -4632,3 +4632,73 @@
 .profile-logout-btn:hover {
   background: #fef2f2;
 }
+
+/* ============================================
+   BANK DETAILS CARD
+   ============================================ */
+.bank-details-card {
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 12px;
+}
+.bank-details-card h3 {
+  margin: 0 0 16px;
+  color: var(--primary-dark);
+  font-size: 16px;
+}
+.bank-detail-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.bank-detail-row:last-child { border-bottom: none; }
+.bank-detail-label {
+  flex: 0 0 140px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.bank-detail-value {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+}
+.bank-detail-copy {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.bank-detail-copy:hover { opacity: 1; }
+
+/* ============================================
+   ADMIN SETTINGS SECTION
+   ============================================ */
+.admin-settings-section {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 24px;
+  margin-top: 20px;
+}
+.admin-settings-section h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

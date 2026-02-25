@@ -58,6 +58,20 @@ def health_check():
 
 @app.on_event("startup")
 def on_startup():
+    # Add new enum values to PostgreSQL (idempotent)
+    from app.core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        db.execute(text("ALTER TYPE orderstatus ADD VALUE IF NOT EXISTS 'pending_transfer'"))
+        db.execute(text("ALTER TYPE orderstatus ADD VALUE IF NOT EXISTS 'awaiting_delivery_payment'"))
+        db.execute(text("ALTER TYPE paymentprovider ADD VALUE IF NOT EXISTS 'cash_on_delivery'"))
+        db.execute(text("ALTER TYPE paymentprovider ADD VALUE IF NOT EXISTS 'bank_transfer'"))
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
     Base.metadata.create_all(bind=engine)
 
     # Start background scheduler for price alerts and auto-scraping

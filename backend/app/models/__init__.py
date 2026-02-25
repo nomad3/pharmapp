@@ -47,3 +47,5 @@ from app.models.adherence_sponsor_charge import AdherenceSponsorCharge
 from app.models.pharmacy_discount_cap import PharmacyDiscountCap
 # Scraping
 from app.models.scrape_run import ScrapeRun
+# Site configuration
+from app.models.site_setting import SiteSetting

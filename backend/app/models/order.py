@@ -6,14 +6,18 @@ from app.models.base import Base, TimestampMixin
 class OrderStatus(str, enum.Enum):
     pending = "pending"
     payment_sent = "payment_sent"
+    pending_transfer = "pending_transfer"
     confirmed = "confirmed"
     delivering = "delivering"
+    awaiting_delivery_payment = "awaiting_delivery_payment"
     completed = "completed"
     cancelled = "cancelled"
 
 class PaymentProvider(str, enum.Enum):
     mercadopago = "mercadopago"
     transbank = "transbank"
+    cash_on_delivery = "cash_on_delivery"
+    bank_transfer = "bank_transfer"
 
 class Order(TimestampMixin, Base):
     __tablename__ = "orders"

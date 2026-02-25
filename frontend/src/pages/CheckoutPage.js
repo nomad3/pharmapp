@@ -87,7 +87,9 @@ export default function CheckoutPage() {
       if (data.payment_url) {
         window.location.href = data.payment_url;
       } else {
-        navigate(`/orders/${data.id}?status=pending`);
+        // Offline payments — go to order detail with appropriate status
+        const status = paymentProvider === "bank_transfer" ? "transfer" : "cash";
+        navigate(`/orders/${data.id}?status=${status}`);
       }
     } catch (err) {
       setError(err.response?.data?.detail || "Error al crear la orden");
@@ -216,29 +218,39 @@ export default function CheckoutPage() {
           <h2>Medio de pago</h2>
           <div className="payment-options">
             <label className={`payment-option ${paymentProvider === "mercadopago" ? "selected" : ""}`}>
-              <input
-                type="radio"
-                name="payment"
-                value="mercadopago"
+              <input type="radio" name="payment" value="mercadopago"
                 checked={paymentProvider === "mercadopago"}
-                onChange={e => setPaymentProvider(e.target.value)}
-              />
+                onChange={e => setPaymentProvider(e.target.value)} />
               <div className="payment-option__content">
                 <div className="payment-option__name">Mercado Pago</div>
                 <div className="payment-option__desc">Tarjetas de credito/debito, transferencia</div>
               </div>
             </label>
             <label className={`payment-option ${paymentProvider === "transbank" ? "selected" : ""}`}>
-              <input
-                type="radio"
-                name="payment"
-                value="transbank"
+              <input type="radio" name="payment" value="transbank"
                 checked={paymentProvider === "transbank"}
-                onChange={e => setPaymentProvider(e.target.value)}
-              />
+                onChange={e => setPaymentProvider(e.target.value)} />
               <div className="payment-option__content">
                 <div className="payment-option__name">Transbank Webpay</div>
                 <div className="payment-option__desc">Tarjetas de credito/debito</div>
+              </div>
+            </label>
+            <label className={`payment-option ${paymentProvider === "bank_transfer" ? "selected" : ""}`}>
+              <input type="radio" name="payment" value="bank_transfer"
+                checked={paymentProvider === "bank_transfer"}
+                onChange={e => setPaymentProvider(e.target.value)} />
+              <div className="payment-option__content">
+                <div className="payment-option__name">Transferencia Bancaria</div>
+                <div className="payment-option__desc">Transfiere a nuestra cuenta y confirmamos manualmente</div>
+              </div>
+            </label>
+            <label className={`payment-option ${paymentProvider === "cash_on_delivery" ? "selected" : ""}`}>
+              <input type="radio" name="payment" value="cash_on_delivery"
+                checked={paymentProvider === "cash_on_delivery"}
+                onChange={e => setPaymentProvider(e.target.value)} />
+              <div className="payment-option__content">
+                <div className="payment-option__name">Pago en Efectivo</div>
+                <div className="payment-option__desc">Paga al momento de la entrega o retiro</div>
               </div>
             </label>
           </div>
@@ -251,7 +263,13 @@ export default function CheckoutPage() {
           disabled={loading}
           className="btn btn--primary btn--lg checkout-confirm"
         >
-          {loading ? "Procesando..." : `Pagar $${total.toLocaleString("es-CL")} CLP`}
+          {loading ? "Procesando..." : (
+            paymentProvider === "cash_on_delivery"
+              ? `Confirmar pedido — $${Math.round(total).toLocaleString("es-CL")} CLP`
+              : paymentProvider === "bank_transfer"
+                ? `Confirmar pedido — $${Math.round(total).toLocaleString("es-CL")} CLP`
+                : `Pagar $${Math.round(total).toLocaleString("es-CL")} CLP`
+          )}
         </button>
       </div>
     </div>

@@ -23,9 +23,11 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 # Valid status transitions
 VALID_TRANSITIONS = {
     OrderStatus.confirmed: [OrderStatus.delivering, OrderStatus.cancelled],
-    OrderStatus.delivering: [OrderStatus.completed, OrderStatus.cancelled],
+    OrderStatus.delivering: [OrderStatus.completed, OrderStatus.awaiting_delivery_payment, OrderStatus.cancelled],
+    OrderStatus.awaiting_delivery_payment: [OrderStatus.completed, OrderStatus.cancelled],
     OrderStatus.pending: [OrderStatus.cancelled],
     OrderStatus.payment_sent: [OrderStatus.cancelled],
+    OrderStatus.pending_transfer: [OrderStatus.confirmed, OrderStatus.cancelled],
 }
 
 
@@ -197,3 +199,48 @@ def list_all_orders(
         }
         for o in orders
     ]
+
+
+@router.patch("/{order_id}/confirm-payment")
+async def confirm_payment(
+    order_id: str,
+    db: Session = Depends(get_db),
+):
+    """Admin: confirm bank transfer payment."""
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.status != OrderStatus.pending_transfer:
+        raise HTTPException(status_code=400, detail="Order is not pending transfer")
+
+    order.status = OrderStatus.confirmed
+    order.payment_status = "verified"
+    db.commit()
+
+    user = db.query(User).filter(User.id == order.user_id).first()
+    if user:
+        try:
+            await whatsapp.send_payment_confirmed(user.phone_number, str(order.id))
+        except Exception:
+            logger.warning("Failed to send WhatsApp for order %s payment confirmed", order.id)
+
+    return {"id": str(order.id), "status": "confirmed", "message": "Payment confirmed"}
+
+
+@router.patch("/{order_id}/reject-payment")
+async def reject_payment(
+    order_id: str,
+    db: Session = Depends(get_db),
+):
+    """Admin: reject bank transfer (cancel order)."""
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.status != OrderStatus.pending_transfer:
+        raise HTTPException(status_code=400, detail="Order is not pending transfer")
+
+    order.status = OrderStatus.cancelled
+    order.payment_status = "rejected"
+    db.commit()
+
+    return {"id": str(order.id), "status": "cancelled", "message": "Payment rejected"}

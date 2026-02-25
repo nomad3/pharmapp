@@ -45,6 +45,39 @@ async def send_payment_confirmed(phone_number: str, order_id: str) -> dict:
     return await tsunami_client.send_whatsapp(phone_number, message)
 
 
+async def send_cash_on_delivery_confirmation(phone_number: str, order_id: str, total: float) -> dict:
+    """Notify user that their cash-on-delivery order was received."""
+    short_id = order_id[:8]
+    message = (
+        f"*Remedia* — Pedido recibido\n\n"
+        f"Tu pedido #{short_id} fue recibido.\n"
+        f"Total: ${int(total):,} CLP\n\n"
+        f"Paga en efectivo al momento de la entrega."
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
+async def send_bank_transfer_details(
+    phone_number: str, order_id: str, total: float, bank_details: dict
+) -> dict:
+    """Send bank transfer payment instructions via WhatsApp."""
+    short_id = order_id[:8]
+    message = (
+        f"*Remedia* — Datos para transferencia\n\n"
+        f"Tu pedido #{short_id} esta pendiente de pago.\n"
+        f"Total: ${int(total):,} CLP\n\n"
+        f"Transfiere a:\n"
+        f"Banco: {bank_details.get('bank_name', '-')}\n"
+        f"Tipo: {bank_details.get('bank_account_type', '-')}\n"
+        f"Cuenta: {bank_details.get('bank_account_number', '-')}\n"
+        f"RUT: {bank_details.get('bank_rut', '-')}\n"
+        f"Nombre: {bank_details.get('bank_holder_name', '-')}\n"
+        f"Email: {bank_details.get('bank_email', '-')}\n\n"
+        f"Tu pedido sera confirmado al verificar el pago."
+    )
+    return await tsunami_client.send_whatsapp(phone_number, message)
+
+
 async def send_delivery_update(phone_number: str, order_id: str, status: str, rider_name: str | None = None, eta_minutes: int | None = None) -> dict:
     """Send delivery status update via WhatsApp."""
     short_id = order_id[:8]

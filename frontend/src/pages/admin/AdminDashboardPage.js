@@ -12,6 +12,7 @@ function AdminNav() {
     { to: "/admin/orders", label: "Pedidos" },
     { to: "/admin/users", label: "Usuarios" },
     { to: "/admin/scraping", label: "Scraping" },
+    { to: "/admin/settings", label: "Configuracion" },
   ];
   return (
     <nav className="admin-nav">
