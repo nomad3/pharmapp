@@ -134,7 +134,8 @@ async def mercadopago_webhook(request: Request, db: Session = Depends(get_db)):
         return {"status": "ok"}
 
     if mp_status == "approved":
-        order.status = OrderStatus.confirmed
+        if order.status not in (OrderStatus.delivering, OrderStatus.completed):
+            order.status = OrderStatus.confirmed
         order.payment_status = "approved"
         db.commit()
 
@@ -193,7 +194,8 @@ async def transbank_webhook(request: Request, db: Session = Depends(get_db)):
     order = db.query(Order).filter(Order.id == buy_order).first() if buy_order else None
 
     if resp.get("status") == "AUTHORIZED" and order:
-        order.status = OrderStatus.confirmed
+        if order.status not in (OrderStatus.delivering, OrderStatus.completed):
+            order.status = OrderStatus.confirmed
         order.payment_status = "authorized"
         db.commit()
 
